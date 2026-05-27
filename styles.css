@@ -215,6 +215,19 @@ button:disabled {
   background: #dbe3f3;
 }
 
+.pin-input {
+  width: 92px;
+}
+
+body.online-ready #saveState::after {
+  content: " online";
+}
+
+body.online-busy #saveState {
+  opacity: 0.72;
+}
+
+
 .app-shell {
   display: grid;
   grid-template-columns: minmax(220px, 280px) minmax(420px, 1fr) minmax(300px, 390px);

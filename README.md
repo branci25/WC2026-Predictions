@@ -20,3 +20,9 @@ Plán online verzie:
 - admin môže zapisovať výsledky.
 
 Supabase SQL schéma je v `supabase/schema.sql`.
+
+
+Supabase setup:
+
+1. Run supabase/schema.sql in the Supabase SQL Editor.
+2. Run supabase/seed_matches.sql to insert the 72 group-stage matches.

@@ -30,6 +30,68 @@ MATCHES.forEach((match) => {
 
 const BRANO_TIPS = [{matchId:1,home:0,away:3},{matchId:2,home:4,away:2}];
 const STORAGE_KEY = "ms2026-tipovacka-v4";
+const SUPABASE_URL = "https://hhildstrkldmxcqpmjqo.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoaWxkc3Rya2xkbXhjcXBtanFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NjIzMjYsImV4cCI6MjA5NTQzODMyNn0.FEHi9ThOiKX0_ggvuezmCCpFJE353Vj-ghe2sUjdE1g";
+const SESSION_KEY = "ms2026-supabase-sessions-v1";
+const supabaseEnabled = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+let onlineBusy = false;
+
+function loadSessions() {
+  try {
+    return JSON.parse(localStorage.getItem(SESSION_KEY)) || {};
+  } catch {
+    localStorage.removeItem(SESSION_KEY);
+    return {};
+  }
+}
+
+function saveSessions() {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(state.sessions || {}));
+}
+
+async function supabaseRequest(path, options = {}) {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+      ...(options.headers || {}),
+    },
+  });
+  const text = await response.text();
+  const payload = text ? JSON.parse(text) : null;
+  if (!response.ok) throw new Error(payload?.message || payload?.hint || "Supabase request failed");
+  return payload;
+}
+
+function supabaseRpc(name, body) {
+  return supabaseRequest(`rpc/${name}`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+function setOnlineBusy(value) {
+  onlineBusy = value;
+  document.body.classList.toggle("online-busy", value);
+}
+
+function activeSession() {
+  return state.sessions?.[state.activeProfile] || null;
+}
+
+function canEditActiveProfile() {
+  return !supabaseEnabled || Boolean(activeSession());
+}
+
+function requireActiveSession() {
+  const session = activeSession();
+  if (session) return session;
+  alert("Najprv sa prihlás PINom k tomuto profilu.");
+  return null;
+}
 const FLAG_CODES = {
   "Alžírsko": "dz",
   "Anglicko": "gb-eng",
@@ -85,6 +147,8 @@ const state = loadState();
 const els = {
   profileSelect: document.querySelector("#profileSelect"),
   newProfileName: document.querySelector("#newProfileName"),
+  authPin: document.querySelector("#authPin"),
+  loginProfileBtn: document.querySelector("#loginProfileBtn"),
   addProfileBtn: document.querySelector("#addProfileBtn"),
   deleteProfileBtn: document.querySelector("#deleteProfileBtn"),
   groupFilter: document.querySelector("#groupFilter"),
@@ -131,12 +195,13 @@ function defaultState() {
       Erik: { tips: {}, groupPicks: defaultGroupPicks() },
     },
     results,
+    sessions: loadSessions(),
   };
 }
 
 function normalizeState(saved) {
   const base = defaultState();
-  const merged = { ...base, ...saved, profiles: saved?.profiles || base.profiles };
+  const merged = { ...base, ...saved, profiles: saved?.profiles || base.profiles, sessions: loadSessions() };
   Object.keys(merged.profiles).forEach((name) => {
     merged.profiles[name] = {
       tips: merged.profiles[name].tips || {},
@@ -311,7 +376,9 @@ function renderControls() {
   const names = Object.keys(state.profiles);
   els.profileSelect.innerHTML = names.map((name) => `<option value="${name}">${name}</option>`).join("");
   els.profileSelect.value = state.activeProfile;
-  els.deleteProfileBtn.disabled = names.length <= 1;
+  els.deleteProfileBtn.disabled = supabaseEnabled || names.length <= 1;
+  if (els.loginProfileBtn) els.loginProfileBtn.disabled = onlineBusy;
+  if (els.addProfileBtn) els.addProfileBtn.disabled = onlineBusy;
 
   const groupOptions = getGroups().map((group) => `<option value="${group}">Skupina ${group}</option>`);
   els.groupFilter.innerHTML = `<option value="all">Všetky skupiny</option>${groupOptions.join("")}`;
@@ -366,6 +433,7 @@ function renderMatches() {
   const status = els.statusFilter.value || "all";
   const query = els.searchInput.value.trim().toLowerCase();
   const activeTips = state.profiles[state.activeProfile].tips;
+  const canEdit = canEditActiveProfile();
 
   const filtered = MATCHES.filter((match) => {
     const finished = isFinished(match);
@@ -399,8 +467,8 @@ function renderMatches() {
         <div class="team home"><span class="team-name">${match.home}</span>${flagImg(match.home)}</div>
         <div class="score-stack">
           <div class="bet-inputs">
-            <input aria-label="${match.home} tip" type="number" min="0" inputmode="numeric" data-tip-home="${match.id}" value="${tip.home ?? ""}">
-            <input aria-label="${match.away} tip" type="number" min="0" inputmode="numeric" data-tip-away="${match.id}" value="${tip.away ?? ""}">
+            <input aria-label="${match.home} tip" type="number" min="0" inputmode="numeric" data-tip-home="${match.id}" value="${tip.home ?? ""}" ${canEdit ? "" : "disabled"}>
+            <input aria-label="${match.away} tip" type="number" min="0" inputmode="numeric" data-tip-away="${match.id}" value="${tip.away ?? ""}" ${canEdit ? "" : "disabled"}>
           </div>
         </div>
         <div class="team away">${flagImg(match.away)}<span class="team-name">${match.away}</span></div>
@@ -495,6 +563,126 @@ function renderTables() {
   els.finishedCount.textContent = `${finished}/${MATCHES.length} výsledkov`;
 }
 
+async function loadOnlineState() {
+  if (!supabaseEnabled) return;
+  setOnlineBusy(true);
+  try {
+    const [players, remoteMatches, matchTips, groupTips] = await Promise.all([
+      supabaseRequest("players?select=id,display_name,is_admin&order=created_at.asc"),
+      supabaseRequest("matches?select=id,home_score,away_score&order=id.asc"),
+      supabaseRequest("match_tips?select=player_id,match_id,home_score,away_score"),
+      supabaseRequest("group_order_tips?select=player_id,group_code,team_order"),
+    ]);
+
+    const nextProfiles = {};
+    const namesById = new Map();
+    players.forEach((player) => {
+      namesById.set(player.id, player.display_name);
+      nextProfiles[player.display_name] = { tips: {}, groupPicks: defaultGroupPicks() };
+      if (state.sessions?.[player.display_name]) {
+        state.sessions[player.display_name].playerId = player.id;
+        state.sessions[player.display_name].isAdmin = player.is_admin;
+      }
+    });
+
+    matchTips.forEach((tip) => {
+      const name = namesById.get(tip.player_id);
+      if (!name || !nextProfiles[name]) return;
+      nextProfiles[name].tips[tip.match_id] = { home: tip.home_score, away: tip.away_score };
+    });
+
+    groupTips.forEach((tip) => {
+      const name = namesById.get(tip.player_id);
+      if (!name || !nextProfiles[name]) return;
+      nextProfiles[name].groupPicks[tip.group_code] = tip.team_order;
+      nextProfiles[name].groupPicks = normalizeGroupPicks(nextProfiles[name].groupPicks);
+    });
+
+    if (Object.keys(nextProfiles).length) {
+      state.profiles = nextProfiles;
+      if (!state.profiles[state.activeProfile]) state.activeProfile = Object.keys(state.profiles)[0];
+    }
+
+    remoteMatches.forEach((match) => {
+      state.results[match.id] = { home: match.home_score, away: match.away_score };
+    });
+
+    saveSessions();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    document.body.classList.add("online-ready");
+    els.saveState.textContent = remoteMatches.length ? "Pripojené k Supabase" : "Supabase bez zápasov";
+    renderControls();
+    renderAll();
+  } catch (error) {
+    console.error(error);
+    els.saveState.textContent = "Online režim sa nepodarilo načítať";
+  } finally {
+    setOnlineBusy(false);
+  }
+}
+
+async function createOnlineProfile(name, pin) {
+  const rows = await supabaseRpc("create_player", { p_display_name: name, p_pin: pin });
+  const player = rows[0];
+  state.sessions[player.display_name] = {
+    playerId: player.player_id,
+    token: player.session_token,
+    isAdmin: player.is_admin,
+  };
+  state.activeProfile = player.display_name;
+  saveSessions();
+  await loadOnlineState();
+}
+
+async function loginOnlineProfile(name, pin) {
+  const rows = await supabaseRpc("login_player", { p_display_name: name, p_pin: pin });
+  const player = rows[0];
+  state.sessions[player.display_name] = {
+    playerId: player.player_id,
+    token: player.session_token,
+    isAdmin: player.is_admin,
+  };
+  state.activeProfile = player.display_name;
+  saveSessions();
+  await loadOnlineState();
+}
+
+async function saveOnlineMatchTip(matchId) {
+  const session = requireActiveSession();
+  if (!session) return;
+  const tip = state.profiles[state.activeProfile].tips[matchId] || { home: null, away: null };
+  await supabaseRpc("set_match_tip", {
+    p_session_token: session.token,
+    p_match_id: Number(matchId),
+    p_home_score: tip.home,
+    p_away_score: tip.away,
+  });
+  await loadOnlineState();
+}
+
+async function saveOnlineGroupPick(group) {
+  const session = requireActiveSession();
+  if (!session) return;
+  await supabaseRpc("set_group_order_tip", {
+    p_session_token: session.token,
+    p_group_code: group,
+    p_team_order: state.profiles[state.activeProfile].groupPicks[group],
+  });
+  await loadOnlineState();
+}
+
+async function saveOnlineResult(matchId) {
+  const session = requireActiveSession();
+  if (!session) return;
+  const result = state.results[matchId] || { home: null, away: null };
+  await supabaseRpc("set_match_result", {
+    p_session_token: session.token,
+    p_match_id: Number(matchId),
+    p_home_score: result.home,
+    p_away_score: result.away,
+  });
+  await loadOnlineState();
+}
 function bindEvents() {
   els.profileSelect.addEventListener("change", () => {
     state.activeProfile = els.profileSelect.value;
@@ -502,16 +690,50 @@ function bindEvents() {
     renderAll();
   });
 
-  els.addProfileBtn.addEventListener("click", () => {
+  els.addProfileBtn.addEventListener("click", async () => {
     const name = els.newProfileName.value.trim();
-    if (!name || state.profiles[name]) return;
-      state.profiles[name] = { tips: {} };
-      state.profiles[name].groupPicks = defaultGroupPicks();
+    const pin = els.authPin?.value.trim() || "";
+    if (!name) return;
+    if (supabaseEnabled) {
+      if (!/^\d{4,8}$/.test(pin)) {
+        alert("Zadaj PIN z 4 až 8 číslic.");
+        return;
+      }
+      try {
+        setOnlineBusy(true);
+        await createOnlineProfile(name, pin);
+        els.newProfileName.value = "";
+        els.authPin.value = "";
+      } catch (error) {
+        alert(error.message || "Profil sa nepodarilo vytvoriť.");
+      } finally {
+        setOnlineBusy(false);
+      }
+      return;
+    }
+    if (state.profiles[name]) return;
+    state.profiles[name] = { tips: {}, groupPicks: defaultGroupPicks() };
     state.activeProfile = name;
     els.newProfileName.value = "";
     save();
     renderControls();
     renderAll();
+  });
+
+  els.loginProfileBtn?.addEventListener("click", async () => {
+    const name = els.newProfileName.value.trim() || state.activeProfile;
+    const pin = els.authPin?.value.trim() || "";
+    if (!name || !pin) return;
+    try {
+      setOnlineBusy(true);
+      await loginOnlineProfile(name, pin);
+      els.authPin.value = "";
+      els.newProfileName.value = "";
+    } catch (error) {
+      alert(error.message || "Prihlásenie sa nepodarilo.");
+    } finally {
+      setOnlineBusy(false);
+    }
   });
 
   els.deleteProfileBtn.addEventListener("click", () => {
@@ -544,7 +766,7 @@ function bindEvents() {
     document.body.classList.toggle("admin", els.adminMode.checked);
   });
 
-  els.matches.addEventListener("change", (event) => {
+  els.matches.addEventListener("change", async (event) => {
     const input = event.target;
     const tipHome = input.dataset.tipHome;
     const tipAway = input.dataset.tipAway;
@@ -561,6 +783,9 @@ function bindEvents() {
       save();
       renderLeaderboard();
       renderMatches();
+      if (supabaseEnabled) {
+        try { await saveOnlineMatchTip(id); } catch (error) { alert(error.message || "Tip sa nepodarilo uložiť."); await loadOnlineState(); }
+      }
     }
 
     if (resultHome || resultAway) {
@@ -574,6 +799,9 @@ function bindEvents() {
       renderLeaderboard();
       renderMatches();
       renderTables();
+      if (supabaseEnabled) {
+        try { await saveOnlineResult(id); } catch (error) { alert(error.message || "Výsledok môže uložiť iba admin."); await loadOnlineState(); }
+      }
     }
   });
 
@@ -596,22 +824,22 @@ function bindEvents() {
     event.preventDefault();
   });
 
-  els.matches.addEventListener("drop", (event) => {
+  els.matches.addEventListener("drop", async (event) => {
     const target = event.target.closest(".pick-team");
     if (!target) return;
     event.preventDefault();
     const data = JSON.parse(event.dataTransfer.getData("text/plain"));
     const group = target.closest("[data-pick-group]").dataset.pickGroup;
     if (data.group !== group || data.team === target.dataset.team) return;
-    moveTeamTo(group, data.team, target.dataset.team);
+    await moveTeamTo(group, data.team, target.dataset.team);
   });
 
-  els.matches.addEventListener("click", (event) => {
+  els.matches.addEventListener("click", async (event) => {
     const button = event.target.closest("[data-move]");
     if (!button) return;
     const item = button.closest(".pick-team");
     const group = item.closest("[data-pick-group]").dataset.pickGroup;
-    moveTeamStep(group, item.dataset.team, button.dataset.move);
+    await moveTeamStep(group, item.dataset.team, button.dataset.move);
   });
 }
 
@@ -627,7 +855,8 @@ function renderAll() {
   els.profileSelect.value = state.activeProfile;
 }
 
-function moveTeamTo(group, movedTeam, beforeTeam) {
+async function moveTeamTo(group, movedTeam, beforeTeam) {
+  if (supabaseEnabled && !requireActiveSession()) return;
   const order = [...state.profiles[state.activeProfile].groupPicks[group]];
   const from = order.indexOf(movedTeam);
   const to = order.indexOf(beforeTeam);
@@ -637,9 +866,13 @@ function moveTeamTo(group, movedTeam, beforeTeam) {
   state.profiles[state.activeProfile].groupPicks[group] = order;
   save();
   renderGroupPicks();
+  if (supabaseEnabled) {
+    try { await saveOnlineGroupPick(group); } catch (error) { alert(error.message || "Poradie sa nepodarilo uložiť."); await loadOnlineState(); }
+  }
 }
 
-function moveTeamStep(group, team, direction) {
+async function moveTeamStep(group, team, direction) {
+  if (supabaseEnabled && !requireActiveSession()) return;
   const order = [...state.profiles[state.activeProfile].groupPicks[group]];
   const index = order.indexOf(team);
   const target = direction === "up" ? index - 1 : index + 1;
@@ -648,6 +881,9 @@ function moveTeamStep(group, team, direction) {
   state.profiles[state.activeProfile].groupPicks[group] = order;
   save();
   renderGroupPicks();
+  if (supabaseEnabled) {
+    try { await saveOnlineGroupPick(group); } catch (error) { alert(error.message || "Poradie sa nepodarilo uložiť."); await loadOnlineState(); }
+  }
 }
 
 function updateCountdown() {
@@ -668,4 +904,5 @@ renderControls();
 bindEvents();
 renderAll();
 updateCountdown();
+loadOnlineState();
 setInterval(updateCountdown, 1000);
