@@ -113,7 +113,7 @@ create or replace function public.create_player(p_display_name text, p_pin text)
 returns table(player_id uuid, display_name text, session_token uuid, is_admin boolean)
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_player public.players;
@@ -143,7 +143,7 @@ create or replace function public.login_player(p_display_name text, p_pin text)
 returns table(player_id uuid, display_name text, session_token uuid, is_admin boolean)
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_player public.players;
