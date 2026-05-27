@@ -63,6 +63,11 @@ alter table public.matches enable row level security;
 alter table public.match_tips enable row level security;
 alter table public.group_order_tips enable row level security;
 
+-- Recreate policies safely when this file is run more than once.
+drop policy if exists "matches are readable by everyone" on public.matches;
+drop policy if exists "players names are readable by everyone" on public.players;
+drop policy if exists "match tips are readable by everyone" on public.match_tips;
+drop policy if exists "group order tips are readable by everyone" on public.group_order_tips;
 -- Public read access for shared game data and leaderboard views.
 create policy "matches are readable by everyone"
 on public.matches for select
