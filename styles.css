@@ -295,6 +295,10 @@ h2 {
   text-transform: uppercase;
 }
 
+.leader-header span:first-child {
+  text-align: left;
+}
+
 .leader-header span:nth-child(2) {
   text-align: left;
 }
