@@ -375,7 +375,7 @@ function flagImg(team) {
 function renderControls() {
   const names = Object.keys(state.profiles);
   els.profileSelect.innerHTML = names.map((name) => `<option value="${name}">${name}</option>`).join("");
-  els.profileSelect.value = state.activeProfile;
+  if (state.activeProfile) els.profileSelect.value = state.activeProfile;
   els.deleteProfileBtn.disabled = supabaseEnabled || names.length <= 1;
   if (els.loginProfileBtn) els.loginProfileBtn.disabled = onlineBusy;
   if (els.addProfileBtn) els.addProfileBtn.disabled = onlineBusy;
@@ -432,7 +432,7 @@ function renderMatches() {
   const group = els.groupFilter.value || "all";
   const status = els.statusFilter.value || "all";
   const query = els.searchInput.value.trim().toLowerCase();
-  const activeTips = state.profiles[state.activeProfile].tips;
+  const activeTips = state.profiles[state.activeProfile]?.tips || {};
   const canEdit = canEditActiveProfile();
 
   const filtered = MATCHES.filter((match) => {
@@ -488,6 +488,10 @@ function renderMatches() {
 }
 
 function renderGroupPicks() {
+  if (!state.activeProfile || !state.profiles[state.activeProfile]) {
+    els.matches.innerHTML = `<div class="empty-state">Vytvor alebo prihlás hráča, aby sa dalo tipovať poradie skupín.</div>`;
+    return;
+  }
   const picks = state.profiles[state.activeProfile].groupPicks;
   const groupScores = scoreGroupPicks().byGroup;
   els.matches.innerHTML = `
@@ -598,10 +602,8 @@ async function loadOnlineState() {
       nextProfiles[name].groupPicks = normalizeGroupPicks(nextProfiles[name].groupPicks);
     });
 
-    if (Object.keys(nextProfiles).length) {
-      state.profiles = nextProfiles;
-      if (!state.profiles[state.activeProfile]) state.activeProfile = Object.keys(state.profiles)[0];
-    }
+    state.profiles = nextProfiles;
+    if (!state.profiles[state.activeProfile]) state.activeProfile = Object.keys(state.profiles)[0] || "";
 
     remoteMatches.forEach((match) => {
       state.results[match.id] = { home: match.home_score, away: match.away_score };
@@ -775,6 +777,7 @@ function bindEvents() {
 
     if (tipHome || tipAway) {
       const id = tipHome || tipAway;
+      if (!state.activeProfile || !state.profiles[state.activeProfile]) return;
       const current = state.profiles[state.activeProfile].tips[id] || { home: null, away: null };
       state.profiles[state.activeProfile].tips[id] = {
         ...current,
@@ -852,7 +855,7 @@ function renderAll() {
     renderMatches();
   }
   renderTables();
-  els.profileSelect.value = state.activeProfile;
+  if (state.activeProfile) els.profileSelect.value = state.activeProfile;
 }
 
 async function moveTeamTo(group, movedTeam, beforeTeam) {
