@@ -76,6 +76,8 @@ function supabaseRpc(name, body) {
 function setOnlineBusy(value) {
   onlineBusy = value;
   document.body.classList.toggle("online-busy", value);
+  if (els?.loginProfileBtn) els.loginProfileBtn.disabled = value;
+  if (els?.addProfileBtn) els.addProfileBtn.disabled = value;
 }
 
 function activeSession() {
