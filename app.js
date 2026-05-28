@@ -78,6 +78,7 @@ function setOnlineBusy(value) {
   document.body.classList.toggle("online-busy", value);
   if (els?.loginProfileBtn) els.loginProfileBtn.disabled = value;
   if (els?.addProfileBtn) els.addProfileBtn.disabled = value;
+  if (typeof updateAdminAccess === "function") updateAdminAccess();
 }
 
 function activeSession() {
@@ -86,6 +87,10 @@ function activeSession() {
 
 function canEditActiveProfile() {
   return !supabaseEnabled || Boolean(activeSession());
+}
+
+function canEditResults() {
+  return !supabaseEnabled || Boolean(activeSession()?.isAdmin);
 }
 
 function requireActiveSession() {
@@ -157,6 +162,7 @@ const els = {
   statusFilter: document.querySelector("#statusFilter"),
   searchInput: document.querySelector("#searchInput"),
   adminMode: document.querySelector("#adminMode"),
+  adminToggle: document.querySelector(".admin-toggle"),
   matchesViewBtn: document.querySelector("#matchesViewBtn"),
   groupsViewBtn: document.querySelector("#groupsViewBtn"),
   matches: document.querySelector("#matches"),
@@ -381,11 +387,23 @@ function renderControls() {
   els.deleteProfileBtn.disabled = supabaseEnabled || names.length <= 1;
   if (els.loginProfileBtn) els.loginProfileBtn.disabled = onlineBusy;
   if (els.addProfileBtn) els.addProfileBtn.disabled = onlineBusy;
+  if (els.adminToggle) els.adminToggle.hidden = supabaseEnabled && !canEditResults();
+  if (els.adminMode && !canEditResults()) {
+    els.adminMode.checked = false;
+    document.body.classList.remove("admin");
+  }
 
   const groupOptions = getGroups().map((group) => `<option value="${group}">Skupina ${group}</option>`);
   els.groupFilter.innerHTML = `<option value="all">Všetky skupiny</option>${groupOptions.join("")}`;
 }
 
+function updateAdminAccess() {
+  if (els.adminToggle) els.adminToggle.hidden = supabaseEnabled && !canEditResults();
+  if (els.adminMode && !canEditResults()) {
+    els.adminMode.checked = false;
+    document.body.classList.remove("admin");
+  }
+}
 function renderLeaderboard() {
   const rows = Object.keys(state.profiles)
     .map((name) => ({ name, ...profileStats(name) }))
@@ -767,6 +785,11 @@ function bindEvents() {
   });
 
   els.adminMode.addEventListener("change", () => {
+    if (els.adminMode.checked && !canEditResults()) {
+      els.adminMode.checked = false;
+      alert("Výsledky môže upravovať iba prihlásený admin.");
+      return;
+    }
     document.body.classList.toggle("admin", els.adminMode.checked);
   });
 
@@ -849,6 +872,7 @@ function bindEvents() {
 }
 
 function renderAll() {
+  updateAdminAccess();
   renderLeaderboard();
   renderViewTabs();
   if (state.activeView === "groups") {
