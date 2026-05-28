@@ -58,6 +58,16 @@ function setAuthError(message) {
   if (els.authModalError) els.authModalError.textContent = message || "Niečo sa nepodarilo.";
 }
 
+function friendlyAuthError(error, mode = authMode) {
+  const message = String(error?.message || error || "").toLowerCase();
+  if (message.includes("invalid name or pin")) return "Nespr\u00e1vny PIN alebo profil.";
+  if (message.includes("duplicate key") || message.includes("players_display_name_key") || message.includes("already exists")) return "\u00da\u010det s t\u00fdmto menom u\u017e existuje.";
+  if (message.includes("name is too short")) return "Meno mus\u00ed ma\u0165 aspo\u0148 2 znaky.";
+  if (message.includes("pin must be")) return "PIN mus\u00ed ma\u0165 4 a\u017e 8 \u010d\u00edslic.";
+  if (message.includes("display_name") && message.includes("ambiguous")) return mode === "login" ? "Prihl\u00e1senie je potrebn\u00e9 opravi\u0165 v datab\u00e1ze. Spusti aktualizovan\u00fd schema.sql." : "\u00da\u010det sa nepodarilo vytvori\u0165.";
+  return mode === "create" ? "\u00da\u010det sa nepodarilo vytvori\u0165." : "Prihl\u00e1senie sa nepodarilo.";
+}
+
 function escapeHtml(value) {
   return String(value).replace(/[&<>\"]/g, (char) => ({
     "&": "&amp;",

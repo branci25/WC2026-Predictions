@@ -156,7 +156,7 @@ declare
 begin
   select * into v_player
   from public.players
-  where lower(display_name) = lower(trim(p_display_name));
+  where lower(public.players.display_name) = lower(trim(p_display_name));
 
   if v_player.id is null or v_player.pin_hash <> crypt(p_pin, v_player.pin_hash) then
     raise exception 'Invalid name or PIN';
