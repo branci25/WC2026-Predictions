@@ -107,6 +107,7 @@ function setOnlineBusy(value) {
   if (els?.openCreateAccountBtn) els.openCreateAccountBtn.disabled = value;
   if (els?.logoutBtn) els.logoutBtn.disabled = value;
   if (els?.deleteAccountBtn) els.deleteAccountBtn.disabled = value || !activeSession();
+  if (typeof renderChat === "function") renderChat();
   if (typeof updateAdminAccess === "function") updateAdminAccess();
 }
 
