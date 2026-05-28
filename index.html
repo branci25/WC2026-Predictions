@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260528-7">
+    <link rel="stylesheet" href="styles.css?v=20260528-8">
   </head>
   <body>
     <section class="tournament-strip" aria-label="FIFA World Cup 2026">
@@ -90,6 +90,17 @@
           <h4>Tipy poradia skupín</h4>
           <div><strong>1</strong><span>tím presne na správnom mieste po skupine</span></div>
         </div>
+        <section class="chat-box" aria-label="Chat">
+          <div class="chat-head">
+            <h3>Chat</h3>
+            <span id="chatHint">Len pre prihl&aacute;sen&yacute;ch</span>
+          </div>
+          <div id="chatMessages" class="chat-messages"></div>
+          <form id="chatForm" class="chat-form" autocomplete="off">
+            <input id="chatInput" type="text" maxlength="240" placeholder="Spr&aacute;va">
+            <button type="submit">Posla&#357;</button>
+          </form>
+        </section>
       </aside>
 
       <section class="matches-area">
@@ -134,6 +145,6 @@
       </aside>
     </main>
 
-    <script src="app.js?v=20260528-7"></script>
+    <script src="app.js?v=20260528-8"></script>
   </body>
 </html>

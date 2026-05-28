@@ -199,6 +199,10 @@ const els = {
   accountPinInput: document.querySelector("#accountPinInput"),
   authModalError: document.querySelector("#authModalError"),
   authSubmitBtn: document.querySelector("#authSubmitBtn"),
+  chatMessages: document.querySelector("#chatMessages"),
+  chatForm: document.querySelector("#chatForm"),
+  chatInput: document.querySelector("#chatInput"),
+  chatHint: document.querySelector("#chatHint"),
   groupFilter: document.querySelector("#groupFilter"),
   statusFilter: document.querySelector("#statusFilter"),
   searchInput: document.querySelector("#searchInput"),
@@ -251,7 +255,7 @@ function defaultState() {
 
 function normalizeState(saved) {
   const base = defaultState();
-  const merged = { ...base, ...saved, profiles: saved?.profiles || base.profiles, sessions: loadSessions(), authProfile: saved?.authProfile || "" };
+  const merged = { ...base, ...saved, profiles: saved?.profiles || base.profiles, sessions: loadSessions(), authProfile: saved?.authProfile || "", chatMessages: saved?.chatMessages || [] };
   Object.keys(merged.profiles).forEach((name) => {
     merged.profiles[name] = {
       tips: merged.profiles[name].tips || {},
@@ -423,6 +427,26 @@ function flagImg(team) {
   return `<img class="flag" src="${src}" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='${fallbackUrl}'">`;
 }
 
+function formatChatTime(value) {
+  if (!value) return "";
+  return new Date(value).toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" });
+}
+
+function renderChat() {
+  if (!els.chatMessages) return;
+  const messages = state.chatMessages || [];
+  const loggedIn = Boolean(activeSession());
+  if (els.chatHint) els.chatHint.textContent = loggedIn ? "P\u00ed\u0161e\u0161 ako " + state.authProfile : "Len pre prihl\u00e1sen\u00fdch";
+  if (els.chatInput) els.chatInput.disabled = !loggedIn || onlineBusy;
+  const button = els.chatForm?.querySelector("button");
+  if (button) button.disabled = !loggedIn || onlineBusy;
+  els.chatMessages.innerHTML = messages.length ? messages.map((message) => {
+    const own = message.playerName === state.authProfile ? "own" : "";
+    return `<article class="chat-message ${own}"><div class="chat-meta"><span>${escapeHtml(message.playerName || "Hr\u00e1\u010d")}</span><time>${formatChatTime(message.createdAt)}</time></div><div class="chat-body">${escapeHtml(message.body)}</div></article>`;
+  }).join("") : `<p class="chat-empty">Zatia\u013e tu ni\u010d nie je. Za\u010dni debatu po prihl\u00e1sen\u00ed.</p>`;
+  els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
+}
+
 function renderControls() {
   const names = Object.keys(state.profiles);
   const loggedIn = Boolean(activeSession());
@@ -433,6 +457,7 @@ function renderControls() {
   if (els.openCreateAccountBtn) els.openCreateAccountBtn.disabled = onlineBusy;
   if (els.logoutBtn) els.logoutBtn.disabled = onlineBusy;
   if (els.deleteAccountBtn) els.deleteAccountBtn.disabled = onlineBusy || !loggedIn;
+  renderChat();
   if (els.adminToggle) els.adminToggle.hidden = supabaseEnabled && !canEditResults();
   if (els.adminMode && !canEditResults()) {
     els.adminMode.checked = false;
@@ -638,11 +663,12 @@ async function loadOnlineState() {
   if (!supabaseEnabled) return;
   setOnlineBusy(true);
   try {
-    const [players, remoteMatches, matchTips, groupTips] = await Promise.all([
+    const [players, remoteMatches, matchTips, groupTips, chatMessages] = await Promise.all([
       supabaseRequest("players?select=id,display_name,is_admin&order=created_at.asc"),
       supabaseRequest("matches?select=id,home_score,away_score&order=id.asc"),
       supabaseRequest("match_tips?select=player_id,match_id,home_score,away_score"),
       supabaseRequest("group_order_tips?select=player_id,group_code,team_order"),
+      supabaseRequest("chat_messages?select=id,player_id,body,created_at&order=created_at.asc&limit=80").catch(() => []),
     ]);
 
     const nextProfiles = {};
@@ -661,6 +687,13 @@ async function loadOnlineState() {
       if (!name || !nextProfiles[name]) return;
       nextProfiles[name].tips[tip.match_id] = { home: tip.home_score, away: tip.away_score };
     });
+
+    state.chatMessages = chatMessages.map((message) => ({
+      id: message.id,
+      playerName: namesById.get(message.player_id) || "Hr\u00e1\u010d",
+      body: message.body,
+      createdAt: message.created_at,
+    }));
 
     groupTips.forEach((tip) => {
       const name = namesById.get(tip.player_id);
@@ -740,6 +773,13 @@ async function saveOnlineGroupPick(group) {
     p_group_code: group,
     p_team_order: state.profiles[state.activeProfile].groupPicks[group],
   });
+  await loadOnlineState();
+}
+
+async function sendOnlineChatMessage(body) {
+  const session = requireActiveSession();
+  if (!session) return;
+  await supabaseRpc("send_chat_message", { p_session_token: session.token, p_body: body });
   await loadOnlineState();
 }
 
@@ -836,6 +876,23 @@ function bindEvents() {
     }
   });
 
+  els.chatForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const body = els.chatInput?.value.trim() || "";
+    if (!body) return;
+    try {
+      setOnlineBusy(true);
+      if (supabaseEnabled) {
+        await sendOnlineChatMessage(body);
+      }
+      els.chatInput.value = "";
+    } catch (error) {
+      alert(error.message || "Spr\u00e1vu sa nepodarilo odosla\u0165.");
+    } finally {
+      setOnlineBusy(false);
+    }
+  });
+
   els.logoutBtn?.addEventListener("click", logout);
 
   els.deleteAccountBtn?.addEventListener("click", async () => {
@@ -918,6 +975,7 @@ function bindEvents() {
       save();
       renderLeaderboard();
       renderMatches();
+      renderChat();
       renderTables();
       if (supabaseEnabled) {
         try { await saveOnlineResult(id); } catch (error) { alert(error.message || "Výsledok môže uložiť iba prihlásený hráč."); await loadOnlineState(); }
@@ -972,8 +1030,8 @@ function renderAll() {
   } else {
     renderMatches();
   }
+  renderChat();
   renderTables();
-  
 }
 
 async function moveTeamTo(group, movedTeam, beforeTeam) {

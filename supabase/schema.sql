@@ -18,6 +18,13 @@ create table if not exists public.player_sessions (
   last_seen_at timestamptz not null default now()
 );
 
+create table if not exists public.chat_messages (
+  id bigint generated always as identity primary key,
+  player_id uuid not null references public.players(id) on delete cascade,
+  body text not null check (length(trim(body)) between 1 and 240),
+  created_at timestamptz not null default now()
+);
+
 create table if not exists public.matches (
   id integer primary key,
   group_code text not null,
@@ -60,6 +67,7 @@ create table if not exists public.group_order_tips (
 alter table public.players enable row level security;
 alter table public.player_sessions enable row level security;
 alter table public.matches enable row level security;
+alter table public.chat_messages enable row level security;
 alter table public.match_tips enable row level security;
 alter table public.group_order_tips enable row level security;
 
@@ -68,6 +76,7 @@ drop policy if exists "matches are readable by everyone" on public.matches;
 drop policy if exists "players names are readable by everyone" on public.players;
 drop policy if exists "match tips are readable by everyone" on public.match_tips;
 drop policy if exists "group order tips are readable by everyone" on public.group_order_tips;
+drop policy if exists "chat messages are readable by everyone" on public.chat_messages;
 -- Public read access for shared game data and leaderboard views.
 create policy "matches are readable by everyone"
 on public.matches for select
@@ -86,6 +95,11 @@ using (true);
 
 create policy "group order tips are readable by everyone"
 on public.group_order_tips for select
+to anon, authenticated
+using (true);
+
+create policy "chat messages are readable by everyone"
+on public.chat_messages for select
 to anon, authenticated
 using (true);
 
@@ -276,9 +290,35 @@ begin
 end;
 $$;
 
+create or replace function public.send_chat_message(
+  p_session_token uuid,
+  p_body text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_player_id uuid;
+  v_body text;
+begin
+  v_player_id := public.touch_session(p_session_token);
+  v_body := trim(p_body);
+
+  if length(v_body) < 1 or length(v_body) > 240 then
+    raise exception 'Message must be 1 to 240 characters';
+  end if;
+
+  insert into public.chat_messages (player_id, body)
+  values (v_player_id, v_body);
+end;
+$$;
+
 grant execute on function public.create_player(text, text) to anon, authenticated;
 grant execute on function public.login_player(text, text) to anon, authenticated;
 grant execute on function public.delete_player(uuid) to anon, authenticated;
 grant execute on function public.set_match_tip(uuid, integer, integer, integer) to anon, authenticated;
 grant execute on function public.set_group_order_tip(uuid, text, text[]) to anon, authenticated;
 grant execute on function public.set_match_result(uuid, integer, integer, integer) to anon, authenticated;
+grant execute on function public.send_chat_message(uuid, text) to anon, authenticated;
