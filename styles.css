@@ -1261,7 +1261,18 @@ td:nth-child(n + 3) {
   }
 
   .pick-team {
-    grid-template-columns: 24px 34px minmax(0, 1fr) 28px;
+    grid-template-columns: 24px 34px minmax(0, 1fr) 28px 62px;
+    align-items: center;
+    min-height: 54px;
+    gap: 8px;
+  }
+
+  .pick-team .flag,
+  .pick-rank,
+  .pick-name,
+  .pick-score,
+  .pick-buttons {
+    align-self: center;
   }
 
   .drag-handle {
@@ -1269,7 +1280,7 @@ td:nth-child(n + 3) {
   }
 
   .pick-buttons {
-    grid-column: 1 / -1;
+    grid-column: auto;
     justify-content: flex-end;
   }
 }
