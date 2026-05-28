@@ -132,6 +132,14 @@ begin
     raise exception 'PIN must be 4 to 8 digits';
   end if;
 
+  if exists (
+    select 1
+    from public.players
+    where lower(public.players.display_name) = lower(trim(p_display_name))
+  ) then
+    raise exception 'Player already exists';
+  end if;
+
   insert into public.players (display_name, pin_hash)
   values (trim(p_display_name), crypt(p_pin, gen_salt('bf')))
   returning * into v_player;
