@@ -1138,10 +1138,11 @@ td:nth-child(n + 3) {
     position: static;
     transform: none;
     grid-column: 1 / -1;
-    width: 150px;
-    justify-self: start;
+    width: min(190px, 100%);
+    justify-self: center;
     font-size: 12px;
     line-height: 1.2;
+    text-align: center;
   }
 
   .group-badge {
@@ -1152,6 +1153,14 @@ td:nth-child(n + 3) {
   .match-date,
   .match-time {
     font-size: 15px;
+  }
+
+  .match-date {
+    text-align: right;
+  }
+
+  .match-time {
+    text-align: left;
   }
 
   .match-venue,
