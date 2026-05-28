@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260528-3">
+    <link rel="stylesheet" href="styles.css?v=20260528-5">
   </head>
   <body>
     <section class="tournament-strip" aria-label="FIFA World Cup 2026">
@@ -35,18 +35,43 @@
           <p id="saveState">Uložené lokálne</p>
         </div>
       </div>
-      <div class="profile-tools">
-        <label>
-          Profil
-          <select id="profileSelect"></select>
-        </label>
-        <input id="authPin" class="pin-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="PIN">
-        <button id="loginProfileBtn" class="secondary-button" type="button">Prihlásiť</button>
-        <input id="newProfileName" type="text" placeholder="Nový hráč">
-        <button id="addProfileBtn" type="button">Pridať</button>
-        <button id="deleteProfileBtn" class="secondary-button" type="button">Zmazať</button>
+      <div class="profile-tools auth-tools">
+        <div id="authLoggedOut" class="auth-actions">
+          <button id="openCreateAccountBtn" type="button">Vytvoriť účet</button>
+          <button id="openLoginBtn" class="secondary-button" type="button">Prihlásiť sa</button>
+        </div>
+        <div id="authLoggedIn" class="auth-session" hidden>
+          <span>Prihlásený: <strong id="loggedInName"></strong></span>
+          <button id="logoutBtn" class="secondary-button" type="button">Odhlásiť sa</button>
+          <button id="deleteAccountBtn" class="secondary-button danger-button" type="button">Zmazať účet</button>
+        </div>
       </div>
     </header>
+
+    <div id="authModal" class="modal-backdrop" hidden>
+      <form id="authForm" class="auth-modal" autocomplete="off">
+        <div class="modal-head">
+          <h2 id="authModalTitle">Prihlásiť sa</h2>
+          <button id="closeAuthModalBtn" class="icon-button" type="button" aria-label="Zavrieť">×</button>
+        </div>
+        <label id="loginProfileField">
+          Profil
+          <select id="loginProfileSelect"></select>
+        </label>
+        <label id="createNameField">
+          Meno
+          <input id="accountNameInput" type="text" maxlength="24" placeholder="Tvoje meno">
+        </label>
+        <label>
+          PIN
+          <input id="accountPinInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="4-8 číslic">
+        </label>
+        <p id="authModalError" class="form-error" role="alert"></p>
+        <div class="modal-actions">
+          <button id="authSubmitBtn" type="submit">Pokračovať</button>
+        </div>
+      </form>
+    </div>
 
     <main class="app-shell">
       <aside class="panel leaderboard-panel">
@@ -109,6 +134,6 @@
       </aside>
     </main>
 
-    <script src="app.js?v=20260528-3"></script>
+    <script src="app.js?v=20260528-5"></script>
   </body>
 </html>

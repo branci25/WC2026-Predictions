@@ -237,17 +237,8 @@ set search_path = public
 as $$
 declare
   v_player_id uuid;
-  v_is_admin boolean;
 begin
   v_player_id := public.touch_session(p_session_token);
-
-  select is_admin into v_is_admin
-  from public.players
-  where id = v_player_id;
-
-  if not coalesce(v_is_admin, false) then
-    raise exception 'Admin access required';
-  end if;
 
   if p_home_score < 0 or p_away_score < 0 then
     raise exception 'Scores cannot be negative';
@@ -261,8 +252,25 @@ begin
 end;
 $$;
 
+create or replace function public.delete_player(p_session_token uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_player_id uuid;
+begin
+  v_player_id := public.touch_session(p_session_token);
+
+  delete from public.players
+  where id = v_player_id;
+end;
+$$;
+
 grant execute on function public.create_player(text, text) to anon, authenticated;
 grant execute on function public.login_player(text, text) to anon, authenticated;
+grant execute on function public.delete_player(uuid) to anon, authenticated;
 grant execute on function public.set_match_tip(uuid, integer, integer, integer) to anon, authenticated;
 grant execute on function public.set_group_order_tip(uuid, text, text[]) to anon, authenticated;
 grant execute on function public.set_match_result(uuid, integer, integer, integer) to anon, authenticated;

@@ -19,6 +19,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -152,6 +156,8 @@ h1 {
 }
 
 .profile-tools,
+.auth-actions,
+.auth-session,
 .filters,
 .filter-group {
   display: flex;
@@ -213,6 +219,98 @@ button:disabled {
 
 .secondary-button:hover {
   background: #dbe3f3;
+}
+
+.danger-button {
+  color: #9f2f35;
+  background: #f8e8eb;
+}
+
+.danger-button:hover {
+  background: #f3d4da;
+}
+
+.auth-session {
+  align-items: center;
+}
+
+.auth-session span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.auth-session strong {
+  color: var(--ink);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(18, 27, 47, 0.38);
+  backdrop-filter: blur(10px);
+}
+
+.modal-backdrop[hidden] {
+  display: none;
+}
+
+.auth-modal {
+  display: grid;
+  gap: 14px;
+  width: min(420px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(18, 27, 47, 0.22);
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.icon-button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: var(--ink);
+  background: #eef3fb;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.icon-button:hover {
+  background: #dbe3f3;
+}
+
+.form-error {
+  min-height: 18px;
+  color: #b4232f;
+  font-size: 13px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.pick-team.readonly {
+  cursor: default;
+}
+
+.leader-row.owned .leader-name::after {
+  content: " ty";
+  margin-left: 6px;
+  color: var(--primary-dark);
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .pin-input {
@@ -995,6 +1093,8 @@ td:nth-child(n + 3) {
 
   .topbar,
   .profile-tools,
+  .auth-actions,
+  .auth-session,
   .filters,
   .filter-group {
     align-items: stretch;
