@@ -48,6 +48,7 @@ create table if not exists public.match_tips (
   match_id integer not null references public.matches(id) on delete cascade,
   home_score integer,
   away_score integer,
+  is_joker boolean not null default false,
   updated_at timestamptz not null default now(),
   primary key (player_id, match_id),
   constraint match_tips_scores_nonnegative check (
@@ -55,6 +56,9 @@ create table if not exists public.match_tips (
     and (away_score is null or away_score >= 0)
   )
 );
+
+alter table public.match_tips
+add column if not exists is_joker boolean not null default false;
 
 create table if not exists public.group_order_tips (
   player_id uuid not null references public.players(id) on delete cascade,
@@ -236,6 +240,55 @@ begin
 end;
 $$;
 
+create or replace function public.set_match_joker(
+  p_session_token uuid,
+  p_match_id integer,
+  p_is_joker boolean
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_player_id uuid;
+  v_lock_at timestamp;
+  v_other_jokers integer;
+begin
+  v_player_id := public.touch_session(p_session_token);
+
+  select (match_date::text || ' ' || match_time)::timestamp - interval '10 minutes'
+  into v_lock_at
+  from public.matches
+  where id = p_match_id;
+
+  if v_lock_at is null then
+    raise exception 'Match not found';
+  end if;
+
+  if (now() at time zone 'Europe/Bratislava') >= v_lock_at then
+    raise exception 'Match joker is locked';
+  end if;
+
+  select count(*) into v_other_jokers
+  from public.match_tips
+  where player_id = v_player_id
+    and match_id <> p_match_id
+    and is_joker = true;
+
+  if coalesce(p_is_joker, false) = true and v_other_jokers >= 2 then
+    raise exception 'Too many jokers';
+  end if;
+
+  insert into public.match_tips (player_id, match_id, is_joker, updated_at)
+  values (v_player_id, p_match_id, coalesce(p_is_joker, false), now())
+  on conflict (player_id, match_id)
+  do update set
+    is_joker = excluded.is_joker,
+    updated_at = now();
+end;
+$$;
+
 create or replace function public.set_group_order_tip(
   p_session_token uuid,
   p_group_code text,
@@ -333,6 +386,7 @@ grant execute on function public.create_player(text, text) to anon, authenticate
 grant execute on function public.login_player(text, text) to anon, authenticated;
 grant execute on function public.delete_player(uuid) to anon, authenticated;
 grant execute on function public.set_match_tip(uuid, integer, integer, integer) to anon, authenticated;
+grant execute on function public.set_match_joker(uuid, integer, boolean) to anon, authenticated;
 grant execute on function public.set_group_order_tip(uuid, text, text[]) to anon, authenticated;
 grant execute on function public.set_match_result(uuid, integer, integer, integer) to anon, authenticated;
 grant execute on function public.send_chat_message(uuid, text) to anon, authenticated;

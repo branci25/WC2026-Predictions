@@ -34,6 +34,7 @@ const SUPABASE_URL = "https://hhildstrkldmxcqpmjqo.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoaWxkc3Rya2xkbXhjcXBtanFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NjIzMjYsImV4cCI6MjA5NTQzODMyNn0.FEHi9ThOiKX0_ggvuezmCCpFJE353Vj-ghe2sUjdE1g";
 const SESSION_KEY = "ms2026-supabase-sessions-v1";
 const TIP_LOCK_MINUTES = 10;
+const MAX_JOKERS = 2;
 const supabaseEnabled = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 let onlineBusy = false;
 let authMode = "login";
@@ -67,6 +68,14 @@ function friendlyAuthError(error, mode = authMode) {
   if (message.includes("pin must be")) return "PIN mus\u00ed ma\u0165 4 a\u017e 8 \u010d\u00edslic.";
   if (message.includes("display_name") && message.includes("ambiguous")) return mode === "login" ? "Prihl\u00e1senie je potrebn\u00e9 opravi\u0165 v datab\u00e1ze. Spusti aktualizovan\u00fd schema.sql." : "\u00da\u010det sa nepodarilo vytvori\u0165.";
   return mode === "create" ? "\u00da\u010det sa nepodarilo vytvori\u0165." : "Prihl\u00e1senie sa nepodarilo.";
+}
+
+function friendlyJokerError(error) {
+  const message = String(error?.message || error || "").toLowerCase();
+  if (message.includes("too many jokers")) return `M\u00f4\u017ee\u0161 pou\u017ei\u0165 najviac ${MAX_JOKERS} \u017eol\u00edky.`;
+  if (message.includes("match joker is locked")) return "\u017dol\u00edk pre tento z\u00e1pas je u\u017e uzavret\u00fd.";
+  if (message.includes("set_match_joker") || message.includes("function") || message.includes("schema cache")) return "\u017dol\u00edk e\u0161te nie je zapnut\u00fd v datab\u00e1ze. Spusti aktualizovan\u00fd schema.sql.";
+  return "\u017dol\u00edk sa nepodarilo ulo\u017ei\u0165.";
 }
 
 function escapeHtml(value) {
@@ -259,8 +268,16 @@ function normalizeState(saved) {
   const base = defaultState();
   const merged = { ...base, ...saved, profiles: saved?.profiles || base.profiles, sessions: loadSessions(), authProfile: saved?.authProfile || "", chatMessages: saved?.chatMessages || [] };
   Object.keys(merged.profiles).forEach((name) => {
+    const normalizedTips = {};
+    Object.entries(merged.profiles[name].tips || {}).forEach(([matchId, tip]) => {
+      normalizedTips[matchId] = {
+        home: tip?.home ?? null,
+        away: tip?.away ?? null,
+        joker: Boolean(tip?.joker),
+      };
+    });
     merged.profiles[name] = {
-      tips: merged.profiles[name].tips || {},
+      tips: normalizedTips,
       groupPicks: normalizeGroupPicks(merged.profiles[name].groupPicks),
     };
   });
@@ -291,7 +308,15 @@ function isFinished(match) {
   return result?.home !== null && result?.away !== null;
 }
 
-function scoreTip(match, profileName = state.activeProfile) {
+function isJoker(profileName, matchId) {
+  return Boolean(state.profiles[profileName]?.tips?.[matchId]?.joker);
+}
+
+function jokerCount(profileName = state.activeProfile) {
+  return Object.values(state.profiles[profileName]?.tips || {}).filter((tip) => tip?.joker).length;
+}
+
+function baseScoreTip(match, profileName = state.activeProfile) {
   const tip = state.profiles[profileName]?.tips?.[match.id];
   const result = state.results[match.id];
   if (!tip || tip.home === null || tip.away === null || !result || result.home === null || result.away === null) return null;
@@ -308,6 +333,12 @@ function scoreTip(match, profileName = state.activeProfile) {
   if (sameOutcome) return 3;
   if (exactHome || exactAway) return 1;
   return 0;
+}
+
+function scoreTip(match, profileName = state.activeProfile) {
+  const baseScore = baseScoreTip(match, profileName);
+  if (baseScore === null) return null;
+  return isJoker(profileName, match.id) ? baseScore * 2 : baseScore;
 }
 
 function profileStats(profileName) {
@@ -597,6 +628,8 @@ function renderMatches() {
     const finished = isFinished(match);
     const tipLocked = isTipLocked(match, now);
     const canEditTip = canEdit && !tipLocked;
+    const joker = isJoker(state.activeProfile, match.id);
+    const jokerLabel = joker ? "\u017dol\u00edk x2" : `\u017dol\u00edk ${jokerCount()}/${MAX_JOKERS}`;
     return `
       <article class="match-card ${finished ? "finished" : ""} ${tipLocked ? "tip-locked" : ""}">
         <div class="match-meta">
@@ -612,11 +645,12 @@ function renderMatches() {
             <input aria-label="${match.away} tip" type="number" min="0" inputmode="numeric" data-tip-away="${match.id}" value="${tip.away ?? ""}" ${canEditTip ? "" : "disabled"}>
           </div>
           <div class="lock-countdown ${tipLocked ? "locked" : ""}" data-lock-match="${match.id}">${lockText(match, now)}</div>
+          <button class="joker-button ${joker ? "active" : ""}" type="button" data-joker="${match.id}" ${canEditTip ? "" : "disabled"}>${jokerLabel}</button>
         </div>
         <div class="team away">${flagImg(match.away)}<span class="team-name">${match.away}</span></div>
         <div class="match-actions">
           <span class="result-badge ${finished ? "" : "empty"}">${finished ? `${result.home}:${result.away}` : ""}</span>
-          <span class="points-badge ${score === null ? "empty" : ""}">${score === null ? "-" : `${score} b`}</span>
+          <span class="points-badge ${score === null ? "empty" : ""} ${joker ? "joker" : ""}">${score === null ? "-" : `${score} b${joker ? " x2" : ""}`}</span>
           <div class="result-editor">
             <div class="result-inputs">
               <input aria-label="${match.home} výsledok" type="number" min="0" inputmode="numeric" data-result-home="${match.id}" value="${result.home ?? ""}">
@@ -714,10 +748,12 @@ async function loadOnlineState() {
   if (!supabaseEnabled) return;
   setOnlineBusy(true);
   try {
+    const matchTipsRequest = supabaseRequest("match_tips?select=player_id,match_id,home_score,away_score,is_joker")
+      .catch(() => supabaseRequest("match_tips?select=player_id,match_id,home_score,away_score"));
     const [players, remoteMatches, matchTips, groupTips, chatMessages] = await Promise.all([
       supabaseRequest("players?select=id,display_name,is_admin&order=created_at.asc"),
       supabaseRequest("matches?select=id,match_date,match_time,city,stadium,home_score,away_score&order=id.asc"),
-      supabaseRequest("match_tips?select=player_id,match_id,home_score,away_score"),
+      matchTipsRequest,
       supabaseRequest("group_order_tips?select=player_id,group_code,team_order"),
       supabaseRequest("chat_messages?select=id,player_id,body,created_at&order=created_at.asc&limit=80").catch(() => []),
     ]);
@@ -736,7 +772,7 @@ async function loadOnlineState() {
     matchTips.forEach((tip) => {
       const name = namesById.get(tip.player_id);
       if (!name || !nextProfiles[name]) return;
-      nextProfiles[name].tips[tip.match_id] = { home: tip.home_score, away: tip.away_score };
+      nextProfiles[name].tips[tip.match_id] = { home: tip.home_score, away: tip.away_score, joker: Boolean(tip.is_joker) };
     });
 
     state.chatMessages = chatMessages.map((message) => ({
@@ -819,6 +855,18 @@ async function saveOnlineMatchTip(matchId) {
     p_match_id: Number(matchId),
     p_home_score: tip.home,
     p_away_score: tip.away,
+  });
+  await loadOnlineState();
+}
+
+async function saveOnlineJoker(matchId) {
+  const session = requireActiveSession();
+  if (!session) return;
+  const tip = state.profiles[state.activeProfile].tips[matchId] || { joker: false };
+  await supabaseRpc("set_match_joker", {
+    p_session_token: session.token,
+    p_match_id: Number(matchId),
+    p_is_joker: Boolean(tip.joker),
   });
   await loadOnlineState();
 }
@@ -1077,6 +1125,36 @@ function bindEvents() {
   });
 
   els.matches.addEventListener("click", async (event) => {
+    const jokerButton = event.target.closest("[data-joker]");
+    if (jokerButton) {
+      const id = jokerButton.dataset.joker;
+      if (!state.activeProfile || !state.profiles[state.activeProfile]) return;
+      if (!canEditActiveProfile()) {
+        if (supabaseEnabled) alert("\u017dol\u00edka m\u00f4\u017ee\u0161 meni\u0165 iba pri vlastn\u00fdch tipoch.");
+        renderAll();
+        return;
+      }
+      const match = byId(id);
+      if (match && isTipLocked(match)) {
+        alert("\u017dol\u00edk pre tento z\u00e1pas je u\u017e uzavret\u00fd.");
+        renderAll();
+        return;
+      }
+      const current = state.profiles[state.activeProfile].tips[id] || { home: null, away: null, joker: false };
+      const nextJoker = !current.joker;
+      if (nextJoker && jokerCount() >= MAX_JOKERS) {
+        alert(`M\u00f4\u017ee\u0161 pou\u017ei\u0165 najviac ${MAX_JOKERS} \u017eol\u00edky.`);
+        return;
+      }
+      state.profiles[state.activeProfile].tips[id] = { ...current, joker: nextJoker };
+      save();
+      renderAll();
+      if (supabaseEnabled) {
+        try { await saveOnlineJoker(id); } catch (error) { alert(friendlyJokerError(error)); await loadOnlineState(); }
+      }
+      return;
+    }
+
     const button = event.target.closest("[data-move]");
     if (!button) return;
     const item = button.closest(".pick-team");
