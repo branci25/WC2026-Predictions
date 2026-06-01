@@ -661,7 +661,7 @@ function renderMatches() {
         <div class="team away">${flagImg(match.away)}<span class="team-name">${match.away}</span></div>
         <div class="match-actions">
           <span class="result-badge ${finished ? "" : "empty"}">${finished ? `${result.home}:${result.away}` : ""}</span>
-          <span class="points-badge ${score === null ? "empty" : ""} ${joker ? "joker" : ""} ${scoreToneClass(score, joker)}">${score === null ? "-" : `${score} b${joker ? " x2" : ""}`}</span>
+          <span class="points-badge ${score === null ? "empty" : ""} ${joker ? "joker" : ""} ${scoreToneClass(score, joker)}">${score === null ? "-" : `${score} b`}</span>
           <div class="result-editor">
             <div class="result-inputs">
               <input aria-label="${match.home} výsledok" type="number" min="0" inputmode="numeric" data-result-home="${match.id}" value="${result.home ?? ""}">
