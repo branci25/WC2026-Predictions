@@ -600,11 +600,10 @@ function renderMatches() {
     return `
       <article class="match-card ${finished ? "finished" : ""} ${tipLocked ? "tip-locked" : ""}">
         <div class="match-meta">
-          <span class="group-badge">Skupina ${match.group}</span>
-          <span class="match-date">${formatDate(match.date)}</span>
-          <span class="match-time">${match.time}</span>
+          <span class="match-kickoff"><span class="match-date">${formatDate(match.date)}</span><span class="match-time">${match.time}</span></span>
           <span class="match-venue">${match.venue || ""}</span>
           <span class="match-stadium">${match.stadium || ""}</span>
+          <span class="group-badge">Skupina ${match.group}</span>
         </div>
         <div class="team home"><span class="team-name">${match.home}</span>${flagImg(match.home)}</div>
         <div class="score-stack">

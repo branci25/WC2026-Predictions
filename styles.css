@@ -869,11 +869,25 @@ h2 {
   text-align: center;
 }
 
-.match-date,
-.match-time {
+.match-kickoff {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  padding: 4px 8px;
   color: var(--ink);
-  font-size: 14px;
+  background: rgba(49, 64, 235, 0.08);
+  border: 1px solid rgba(49, 64, 235, 0.16);
+  border-radius: 999px;
+  font-size: 13px;
   font-weight: 500;
+  white-space: nowrap;
+}
+
+.match-time::before {
+  content: "\2022";
+  margin-right: 6px;
+  color: rgba(100, 112, 134, 0.7);
 }
 
 .group-badge,
@@ -1282,17 +1296,8 @@ td:nth-child(n + 3) {
   }
 
 
-  .match-date,
-  .match-time {
-    font-size: 15px;
-  }
-
-  .match-date {
-    text-align: right;
-  }
-
-  .match-time {
-    text-align: left;
+  .match-kickoff {
+    font-size: 13px;
   }
 
   .group-badge,
