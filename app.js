@@ -731,7 +731,7 @@ function renderTables() {
           </thead>
           <tbody>
             ${rows.map((row, index) => `
-              <tr class="${index < 2 ? "qualified-row" : index === 2 ? "third-place-row" : ""}">
+              <tr class="${index < 2 ? "qualified-row" : index === 2 ? "third-place-row" : "last-place-row"}">
                 <td>${index + 1}</td>
                 <td>${row.team}</td>
                 <td>${row.p}</td>
