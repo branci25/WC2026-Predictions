@@ -1259,6 +1259,21 @@ td:nth-child(n + 3) {
   background: #dce4f1;
 }
 
+.third-place-ranking {
+  margin-top: 4px;
+  border-color: rgba(40, 180, 99, 0.32);
+}
+
+.third-place-ranking h3 {
+  color: #116b3a;
+}
+
+.third-place-ranking th:nth-child(3),
+.third-place-ranking td:nth-child(3) {
+  width: 26px;
+  text-align: center;
+}
+
 .empty-state {
   padding: 28px;
   border: 1px dashed var(--line);

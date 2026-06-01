@@ -718,6 +718,31 @@ function scoreGroupTeam(score, team, pickedIndex) {
   return "0";
 }
 
+function standingsRow(row, index, rowClass, includeGroup = false) {
+  return `
+    <tr class="${rowClass}">
+      <td>${index + 1}</td>
+      <td>${row.team}</td>
+      ${includeGroup ? `<td>${row.group}</td>` : ""}
+      <td>${row.p}</td>
+      <td>${row.w}</td>
+      <td>${row.d}</td>
+      <td>${row.l}</td>
+      <td>${row.gf}</td>
+      <td>${row.ga}</td>
+      <td>${row.gd}</td>
+      <td>${row.pts}</td>
+    </tr>
+  `;
+}
+
+function thirdPlaceStandings() {
+  return getGroups()
+    .map((group) => ({ ...groupStandings(group)[2], group }))
+    .filter((row) => row.team)
+    .sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.team.localeCompare(b.team, "sk"));
+}
+
 function renderTables() {
   const tables = getGroups().map((group) => {
     const rows = groupStandings(group);
@@ -727,32 +752,34 @@ function renderTables() {
         <h3>Skupina ${group}</h3>
         <table>
           <thead>
-            <tr><th>#</th><th>Tím</th><th>Z</th><th>V</th><th>R</th><th>P</th><th>GS</th><th>GI</th><th>+/-</th><th>B</th></tr>
+            <tr><th>#</th><th>T\u00edm</th><th>Z</th><th>V</th><th>R</th><th>P</th><th>GS</th><th>GI</th><th>+/-</th><th>B</th></tr>
           </thead>
           <tbody>
-            ${rows.map((row, index) => `
-              <tr class="${index < 2 ? "qualified-row" : index === 2 ? "third-place-row" : "last-place-row"}">
-                <td>${index + 1}</td>
-                <td>${row.team}</td>
-                <td>${row.p}</td>
-                <td>${row.w}</td>
-                <td>${row.d}</td>
-                <td>${row.l}</td>
-                <td>${row.gf}</td>
-                <td>${row.ga}</td>
-                <td>${row.gd}</td>
-                <td>${row.pts}</td>
-              </tr>
-            `).join("")}
+            ${rows.map((row, index) => standingsRow(row, index, index < 2 ? "qualified-row" : index === 2 ? "third-place-row" : "last-place-row")).join("")}
           </tbody>
         </table>
       </section>
     `;
   }).join("");
 
-  els.groupTables.innerHTML = tables;
+  const thirdRows = thirdPlaceStandings();
+  const thirdTable = `
+    <section class="group-table third-place-ranking">
+      <h3>Poradie tret\u00edch t\u00edmov</h3>
+      <table>
+        <thead>
+          <tr><th>#</th><th>T\u00edm</th><th>Sk</th><th>Z</th><th>V</th><th>R</th><th>P</th><th>GS</th><th>GI</th><th>+/-</th><th>B</th></tr>
+        </thead>
+        <tbody>
+          ${thirdRows.map((row, index) => standingsRow(row, index, index < 8 ? "qualified-row" : "last-place-row", true)).join("")}
+        </tbody>
+      </table>
+    </section>
+  `;
+
+  els.groupTables.innerHTML = tables + thirdTable;
   const finished = MATCHES.filter(isFinished).length;
-  els.finishedCount.textContent = `${finished}/${MATCHES.length} výsledkov`;
+  els.finishedCount.textContent = `${finished}/${MATCHES.length} v\u00fdsledkov`;
 }
 
 async function loadOnlineState() {
