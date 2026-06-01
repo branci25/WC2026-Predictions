@@ -341,6 +341,17 @@ function scoreTip(match, profileName = state.activeProfile) {
   return isJoker(profileName, match.id) ? baseScore * 2 : baseScore;
 }
 
+function scoreToneClass(score, joker = false) {
+  if (score === null) return "";
+  const maxScore = joker ? 10 : 5;
+  const ratio = maxScore ? score / maxScore : 0;
+  if (ratio >= 1) return "score-perfect";
+  if (ratio >= 0.75) return "score-good";
+  if (ratio >= 0.45) return "score-mid";
+  if (ratio > 0) return "score-low";
+  return "score-zero";
+}
+
 function profileStats(profileName) {
   let matchPoints = 0;
   let settled = 0;
@@ -650,7 +661,7 @@ function renderMatches() {
         <div class="team away">${flagImg(match.away)}<span class="team-name">${match.away}</span></div>
         <div class="match-actions">
           <span class="result-badge ${finished ? "" : "empty"}">${finished ? `${result.home}:${result.away}` : ""}</span>
-          <span class="points-badge ${score === null ? "empty" : ""} ${joker ? "joker" : ""}">${score === null ? "-" : `${score} b${joker ? " x2" : ""}`}</span>
+          <span class="points-badge ${score === null ? "empty" : ""} ${joker ? "joker" : ""} ${scoreToneClass(score, joker)}">${score === null ? "-" : `${score} b${joker ? " x2" : ""}`}</span>
           <div class="result-editor">
             <div class="result-inputs">
               <input aria-label="${match.home} výsledok" type="number" min="0" inputmode="numeric" data-result-home="${match.id}" value="${result.home ?? ""}">
