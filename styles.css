@@ -869,17 +869,6 @@ h2 {
   text-align: center;
 }
 
-.group-badge {
-  display: inline-grid;
-  place-items: center;
-  min-width: 26px;
-  height: 26px;
-  color: #fff;
-  background: var(--primary-dark);
-  border-radius: 6px;
-  padding: 0 6px;
-}
-
 .match-date,
 .match-time {
   color: var(--ink);
@@ -887,6 +876,7 @@ h2 {
   font-weight: 500;
 }
 
+.group-badge,
 .match-venue,
 .match-stadium {
   min-height: 15px;
@@ -898,6 +888,7 @@ h2 {
   white-space: nowrap;
 }
 
+.group-badge::before,
 .match-venue::before,
 .match-stadium::before {
   content: "\2022";
@@ -1290,10 +1281,6 @@ td:nth-child(n + 3) {
     text-align: center;
   }
 
-  .group-badge {
-    min-width: 32px;
-    height: 32px;
-  }
 
   .match-date,
   .match-time {
@@ -1308,6 +1295,7 @@ td:nth-child(n + 3) {
     text-align: left;
   }
 
+  .group-badge,
   .match-venue,
   .match-stadium {
     font-size: 12px;

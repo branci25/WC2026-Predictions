@@ -597,11 +597,10 @@ function renderMatches() {
     const finished = isFinished(match);
     const tipLocked = isTipLocked(match, now);
     const canEditTip = canEdit && !tipLocked;
-    const venue = match.venue ? ` · ${match.venue}` : "";
     return `
       <article class="match-card ${finished ? "finished" : ""} ${tipLocked ? "tip-locked" : ""}">
         <div class="match-meta">
-          <span class="group-badge">${match.group}</span>
+          <span class="group-badge">Skupina ${match.group}</span>
           <span class="match-date">${formatDate(match.date)}</span>
           <span class="match-time">${match.time}</span>
           <span class="match-venue">${match.venue || ""}</span>
