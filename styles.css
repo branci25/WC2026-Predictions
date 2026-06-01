@@ -839,11 +839,11 @@ h2 {
 .match-card {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(170px, 1fr) 122px minmax(170px, 1fr);
+  grid-template-columns: minmax(0, 1fr) 122px minmax(0, 1fr);
   align-items: center;
-  gap: 12px;
+  gap: 16px 12px;
   min-height: 124px;
-  padding: 42px 82px 18px;
+  padding: 16px 82px 18px 18px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.92);
@@ -856,29 +856,24 @@ h2 {
 }
 
 .match-meta {
-  position: absolute;
-  top: 50%;
-  left: 20px;
-  width: 128px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 5px 8px;
+  justify-content: center;
+  gap: 6px 10px;
   color: var(--muted);
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.15;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
   text-align: center;
-  transform: translateY(-50%);
 }
 
 .group-badge {
-  grid-column: 1 / -1;
-  justify-self: center;
   display: inline-grid;
   place-items: center;
-  min-width: 28px;
-  height: 28px;
+  min-width: 26px;
+  height: 26px;
   color: #fff;
   background: var(--primary-dark);
   border-radius: 6px;
@@ -888,35 +883,32 @@ h2 {
 .match-date,
 .match-time {
   color: var(--ink);
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.match-date {
-  text-align: right;
-}
-
-.match-time {
-  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .match-venue,
 .match-stadium {
-  grid-column: 1 / -1;
   min-height: 15px;
   overflow: hidden;
   color: var(--muted);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.match-venue::before,
+.match-stadium::before {
+  content: "\2022";
+  margin-right: 10px;
+  color: rgba(100, 112, 134, 0.55);
+}
+
 .match-stadium {
-  margin-top: -3px;
   color: rgba(100, 112, 134, 0.82);
-  font-size: 11px;
-  font-weight: 650;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .team {
@@ -930,12 +922,14 @@ h2 {
 }
 
 .team.home {
+  grid-column: 1;
   justify-content: flex-end;
   text-align: right;
   padding-right: 2px;
 }
 
 .team.away {
+  grid-column: 3;
   justify-content: flex-start;
   text-align: left;
   padding-left: 2px;
@@ -962,6 +956,7 @@ h2 {
 
 .score-stack {
   position: relative;
+  grid-column: 2;
   display: grid;
   justify-items: center;
   align-self: center;
