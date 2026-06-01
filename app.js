@@ -33,6 +33,7 @@ const STORAGE_KEY = "ms2026-tipovacka-v4";
 const SUPABASE_URL = "https://hhildstrkldmxcqpmjqo.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoaWxkc3Rya2xkbXhjcXBtanFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NjIzMjYsImV4cCI6MjA5NTQzODMyNn0.FEHi9ThOiKX0_ggvuezmCCpFJE353Vj-ghe2sUjdE1g";
 const SESSION_KEY = "ms2026-supabase-sessions-v1";
+const TIP_LOCK_MINUTES = 10;
 const supabaseEnabled = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 let onlineBusy = false;
 let authMode = "login";
@@ -413,6 +414,53 @@ function scoreGroupPicks(profileName = state.activeProfile) {
   return { total, byGroup };
 }
 
+function matchKickoffAt(match) {
+  const [year, month, day] = match.date.split("-").map(Number);
+  const [hour, minute = 0] = match.time.split(":").map(Number);
+  return new Date(year, month - 1, day, hour, minute, 0, 0);
+}
+
+function matchLockAt(match) {
+  return new Date(matchKickoffAt(match).getTime() - TIP_LOCK_MINUTES * 60 * 1000);
+}
+
+function isTipLocked(match, now = Date.now()) {
+  return now >= matchLockAt(match).getTime();
+}
+
+function formatLockDuration(ms) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const mins = Math.floor((totalSeconds % 3600) / 60);
+  const secs = totalSeconds % 60;
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${mins}m`;
+  if (mins > 0) return `${mins}m ${secs}s`;
+  return `${secs}s`;
+}
+
+function lockText(match, now = Date.now()) {
+  const lockAt = matchLockAt(match);
+  if (now >= lockAt.getTime()) return "Tipovanie uzavret\u00e9";
+  const time = lockAt.toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" });
+  return `Uz\u00e1vierka ${time} - za ${formatLockDuration(lockAt.getTime() - now)}`;
+}
+
+function updateMatchLocks() {
+  const now = Date.now();
+  document.querySelectorAll("[data-lock-match]").forEach((el) => {
+    const match = byId(el.dataset.lockMatch);
+    if (!match) return;
+    el.textContent = lockText(match, now);
+    el.classList.toggle("locked", isTipLocked(match, now));
+  });
+  document.querySelectorAll("[data-tip-home], [data-tip-away]").forEach((input) => {
+    const id = input.dataset.tipHome || input.dataset.tipAway;
+    const match = byId(id);
+    input.disabled = !canEditActiveProfile() || (match ? isTipLocked(match, now) : false);
+  });
+}
 function formatDate(value) {
   const date = new Date(`${value}T12:00:00`);
   const day = String(date.getDate()).padStart(2, "0");
@@ -526,6 +574,7 @@ function renderMatches() {
   const query = els.searchInput.value.trim().toLowerCase();
   const activeTips = state.profiles[state.activeProfile]?.tips || {};
   const canEdit = canEditActiveProfile();
+  const now = Date.now();
 
   const filtered = MATCHES.filter((match) => {
     const finished = isFinished(match);
@@ -546,9 +595,11 @@ function renderMatches() {
     const tip = activeTips[match.id] || { home: null, away: null };
     const score = scoreTip(match);
     const finished = isFinished(match);
+    const tipLocked = isTipLocked(match, now);
+    const canEditTip = canEdit && !tipLocked;
     const venue = match.venue ? ` · ${match.venue}` : "";
     return `
-      <article class="match-card ${finished ? "finished" : ""}">
+      <article class="match-card ${finished ? "finished" : ""} ${tipLocked ? "tip-locked" : ""}">
         <div class="match-meta">
           <span class="group-badge">${match.group}</span>
           <span class="match-date">${formatDate(match.date)}</span>
@@ -559,9 +610,10 @@ function renderMatches() {
         <div class="team home"><span class="team-name">${match.home}</span>${flagImg(match.home)}</div>
         <div class="score-stack">
           <div class="bet-inputs">
-            <input aria-label="${match.home} tip" type="number" min="0" inputmode="numeric" data-tip-home="${match.id}" value="${tip.home ?? ""}" ${canEdit ? "" : "disabled"}>
-            <input aria-label="${match.away} tip" type="number" min="0" inputmode="numeric" data-tip-away="${match.id}" value="${tip.away ?? ""}" ${canEdit ? "" : "disabled"}>
+            <input aria-label="${match.home} tip" type="number" min="0" inputmode="numeric" data-tip-home="${match.id}" value="${tip.home ?? ""}" ${canEditTip ? "" : "disabled"}>
+            <input aria-label="${match.away} tip" type="number" min="0" inputmode="numeric" data-tip-away="${match.id}" value="${tip.away ?? ""}" ${canEditTip ? "" : "disabled"}>
           </div>
+          <div class="lock-countdown ${tipLocked ? "locked" : ""}" data-lock-match="${match.id}">${lockText(match, now)}</div>
         </div>
         <div class="team away">${flagImg(match.away)}<span class="team-name">${match.away}</span></div>
         <div class="match-actions">
@@ -666,7 +718,7 @@ async function loadOnlineState() {
   try {
     const [players, remoteMatches, matchTips, groupTips, chatMessages] = await Promise.all([
       supabaseRequest("players?select=id,display_name,is_admin&order=created_at.asc"),
-      supabaseRequest("matches?select=id,home_score,away_score&order=id.asc"),
+      supabaseRequest("matches?select=id,match_date,match_time,city,stadium,home_score,away_score&order=id.asc"),
       supabaseRequest("match_tips?select=player_id,match_id,home_score,away_score"),
       supabaseRequest("group_order_tips?select=player_id,group_code,team_order"),
       supabaseRequest("chat_messages?select=id,player_id,body,created_at&order=created_at.asc&limit=80").catch(() => []),
@@ -708,6 +760,13 @@ async function loadOnlineState() {
     if (!state.profiles[state.activeProfile]) state.activeProfile = state.authProfile || Object.keys(state.profiles)[0] || "";
 
     remoteMatches.forEach((match) => {
+      const remoteMatchMeta = byId(match.id);
+      if (remoteMatchMeta) {
+        remoteMatchMeta.date = match.match_date || remoteMatchMeta.date;
+        remoteMatchMeta.time = match.match_time || remoteMatchMeta.time;
+        remoteMatchMeta.venue = match.city || remoteMatchMeta.venue;
+        remoteMatchMeta.stadium = match.stadium || remoteMatchMeta.stadium;
+      }
       state.results[match.id] = { home: match.home_score, away: match.away_score };
     });
 
@@ -948,6 +1007,12 @@ function bindEvents() {
         renderAll();
         return;
       }
+      const match = byId(id);
+      if (match && isTipLocked(match)) {
+        alert("Tipovanie tohto z\u00e1pasu je u\u017e uzavret\u00e9.");
+        renderAll();
+        return;
+      }
       const current = state.profiles[state.activeProfile].tips[id] || { home: null, away: null };
       state.profiles[state.activeProfile].tips[id] = {
         ...current,
@@ -1084,6 +1149,7 @@ function updateCountdown() {
   els.countHours.textContent = String(hours).padStart(2, "0");
   els.countMins.textContent = String(mins).padStart(2, "0");
   els.countSecs.textContent = String(secs).padStart(2, "0");
+  updateMatchLocks();
 }
 
 renderControls();

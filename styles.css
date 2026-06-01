@@ -969,6 +969,26 @@ h2 {
   min-height: 40px;
 }
 
+
+.lock-countdown {
+  min-height: 15px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.lock-countdown.locked {
+  color: #9f2f35;
+}
+
+.match-card.tip-locked .bet-inputs input {
+  background: #f4f6fb;
+  color: var(--muted);
+}
+
 .bet-inputs,
 .result-inputs {
   display: grid;
@@ -1304,7 +1324,8 @@ td:nth-child(n + 3) {
   .score-stack {
     grid-column: 2;
     grid-row: 2;
-    min-height: 40px;
+    gap: 5px;
+    min-height: 56px;
   }
 
   .team {

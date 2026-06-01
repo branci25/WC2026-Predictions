@@ -205,8 +205,22 @@ set search_path = public
 as $$
 declare
   v_player_id uuid;
+  v_lock_at timestamp;
 begin
   v_player_id := public.touch_session(p_session_token);
+
+  select (match_date::text || ' ' || match_time)::timestamp - interval '10 minutes'
+  into v_lock_at
+  from public.matches
+  where id = p_match_id;
+
+  if v_lock_at is null then
+    raise exception 'Match not found';
+  end if;
+
+  if (now() at time zone 'Europe/Bratislava') >= v_lock_at then
+    raise exception 'Match tip is locked';
+  end if;
 
   if p_home_score < 0 or p_away_score < 0 then
     raise exception 'Scores cannot be negative';
