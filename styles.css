@@ -350,6 +350,21 @@ body.online-busy #saveState {
   backdrop-filter: blur(18px);
 }
 
+.panel,
+.match-card,
+.group-pick-card,
+.group-table,
+.fantasy-pool-panel,
+.leader-row {
+  --corner-cut: 12px;
+  clip-path: polygon(var(--corner-cut) 0, 100% 0, 100% calc(100% - var(--corner-cut)), calc(100% - var(--corner-cut)) 100%, 0 100%, 0 var(--corner-cut));
+}
+
+.leader-row {
+  --corner-cut: 8px;
+}
+
+
 .leaderboard-panel,
 .tables-area {
   position: sticky;
@@ -1776,6 +1791,15 @@ td:nth-child(n + 3) {
 }
 
 @media (max-width: 520px) {
+  .panel,
+  .match-card,
+  .group-pick-card,
+  .group-table,
+  .fantasy-pool-panel,
+  .leader-row {
+    --corner-cut: 7px;
+  }
+
   .fantasy-summary {
     align-items: stretch;
     flex-direction: column;
