@@ -344,7 +344,7 @@ begin
   select count(distinct item) into v_unique_count
   from unnest(coalesce(p_player_ids, '{}')) as item;
 
-  if coalesce(array_length(p_player_ids, 1), 0) > 7 then
+  if coalesce(array_length(p_player_ids, 1), 0) > 15 then
     raise exception 'Too many fantasy players';
   end if;
 

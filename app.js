@@ -39,16 +39,336 @@ const SESSION_KEY = "ms2026-supabase-sessions-v1";
 const TIP_LOCK_MINUTES = 10;
 const MAX_JOKERS = 2;
 const FANTASY_BUDGET = 100;
-const FANTASY_SQUAD_SIZE = 7;
-const FANTASY_LIMITS = { GK: 1, DEF: 2, MID: 2, FWD: 2 };
+const FANTASY_SQUAD_SIZE = 15;
+const FANTASY_TEAM_LIMIT = 3;
+const FANTASY_LIMITS = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
+const FANTASY_FORMATION = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
 const FANTASY_POSITION_LABELS = { GK: "BR", DEF: "OB", MID: "ZA", FWD: "UT" };
-const FANTASY_POSITION_NAMES = { GK: "Brankár", DEF: "Obranca", MID: "Záložník", FWD: "Útočník" };
-const FANTASY_PLAYERS = [...new Set(MATCHES.flatMap((match) => [match.home, match.away]))].flatMap((team, teamIndex) => [
-  { id: `fp-${teamIndex + 1}-gk`, team, name: `${team} brankár`, position: "GK", price: 10 + (teamIndex % 3) },
-  { id: `fp-${teamIndex + 1}-def`, team, name: `${team} obranca`, position: "DEF", price: 9 + (teamIndex % 4) },
-  { id: `fp-${teamIndex + 1}-mid`, team, name: `${team} tvorca hry`, position: "MID", price: 11 + (teamIndex % 5) },
-  { id: `fp-${teamIndex + 1}-fwd`, team, name: `${team} strelec`, position: "FWD", price: 12 + (teamIndex % 6) },
-]);
+const FANTASY_POSITION_NAMES = { GK: "Brank\u00e1r", DEF: "Obranca", MID: "Z\u00e1lo\u017en\u00edk", FWD: "\u00dato\u010dn\u00edk" };
+const FANTASY_PLAYERS = [
+  {
+    "id": "gk-alisson",
+    "name": "Alisson Becker",
+    "position": "GK",
+    "team": "Braz\u00edlia",
+    "price": 6.0
+  },
+  {
+    "id": "gk-ederson",
+    "name": "Ederson",
+    "position": "GK",
+    "team": "Braz\u00edlia",
+    "price": 6.0
+  },
+  {
+    "id": "gk-raya",
+    "name": "David Raya",
+    "position": "GK",
+    "team": "\u0160panielsko",
+    "price": 5.8
+  },
+  {
+    "id": "gk-simon",
+    "name": "Unai Simon",
+    "position": "GK",
+    "team": "\u0160panielsko",
+    "price": 5.8
+  },
+  {
+    "id": "gk-pickford",
+    "name": "Jordan Pickford",
+    "position": "GK",
+    "team": "Anglicko",
+    "price": 5.5
+  },
+  {
+    "id": "gk-kobel",
+    "name": "Gregor Kobel",
+    "position": "GK",
+    "team": "\u0160vaj\u010diarsko",
+    "price": 5.5
+  },
+  {
+    "id": "gk-martinez",
+    "name": "Emiliano Martinez",
+    "position": "GK",
+    "team": "Argent\u00edna",
+    "price": 5.4
+  },
+  {
+    "id": "gk-neuer",
+    "name": "Manuel Neuer",
+    "position": "GK",
+    "team": "Nemecko",
+    "price": 5.3
+  },
+  {
+    "id": "def-hakimi",
+    "name": "Achraf Hakimi",
+    "position": "DEF",
+    "team": "Maroko",
+    "price": 6.0
+  },
+  {
+    "id": "def-vandijk",
+    "name": "Virgil van Dijk",
+    "position": "DEF",
+    "team": "Holandsko",
+    "price": 6.0
+  },
+  {
+    "id": "def-gabriel",
+    "name": "Gabriel",
+    "position": "DEF",
+    "team": "Braz\u00edlia",
+    "price": 5.8
+  },
+  {
+    "id": "def-saliba",
+    "name": "William Saliba",
+    "position": "DEF",
+    "team": "Franc\u00fazsko",
+    "price": 5.7
+  },
+  {
+    "id": "def-kimmich",
+    "name": "Joshua Kimmich",
+    "position": "DEF",
+    "team": "Nemecko",
+    "price": 5.7
+  },
+  {
+    "id": "def-gvardiol",
+    "name": "Jo\u0161ko Gvardiol",
+    "position": "DEF",
+    "team": "Chorv\u00e1tsko",
+    "price": 5.6
+  },
+  {
+    "id": "def-carvajal",
+    "name": "Dani Carvajal",
+    "position": "DEF",
+    "team": "\u0160panielsko",
+    "price": 5.5
+  },
+  {
+    "id": "def-cucurella",
+    "name": "Marc Cucurella",
+    "position": "DEF",
+    "team": "\u0160panielsko",
+    "price": 5.4
+  },
+  {
+    "id": "def-mendes",
+    "name": "Nuno Mendes",
+    "position": "DEF",
+    "team": "Portugalsko",
+    "price": 5.4
+  },
+  {
+    "id": "def-araujo",
+    "name": "Ronald Araujo",
+    "position": "DEF",
+    "team": "Uruguaj",
+    "price": 5.3
+  },
+  {
+    "id": "def-davies",
+    "name": "Alphonso Davies",
+    "position": "DEF",
+    "team": "Kanada",
+    "price": 5.2
+  },
+  {
+    "id": "def-robertson",
+    "name": "Andy Robertson",
+    "position": "DEF",
+    "team": "\u0160k\u00f3tsko",
+    "price": 5.1
+  },
+  {
+    "id": "mid-vinicius",
+    "name": "Vin\u00edcius J\u00fanior",
+    "position": "MID",
+    "team": "Braz\u00edlia",
+    "price": 10.0
+  },
+  {
+    "id": "mid-dembele",
+    "name": "Demb\u00e9l\u00e9",
+    "position": "MID",
+    "team": "Franc\u00fazsko",
+    "price": 10.0
+  },
+  {
+    "id": "mid-yamal",
+    "name": "Lamine Yamal",
+    "position": "MID",
+    "team": "\u0160panielsko",
+    "price": 10.0
+  },
+  {
+    "id": "mid-salah",
+    "name": "Mohamed Salah",
+    "position": "MID",
+    "team": "Egypt",
+    "price": 10.0
+  },
+  {
+    "id": "mid-saka",
+    "name": "Saka",
+    "position": "MID",
+    "team": "Anglicko",
+    "price": 9.5
+  },
+  {
+    "id": "mid-olise",
+    "name": "Olise",
+    "position": "MID",
+    "team": "Franc\u00fazsko",
+    "price": 9.5
+  },
+  {
+    "id": "mid-bruno",
+    "name": "Bruno Fernandes",
+    "position": "MID",
+    "team": "Portugalsko",
+    "price": 8.5
+  },
+  {
+    "id": "mid-bellingham",
+    "name": "Bellingham",
+    "position": "MID",
+    "team": "Anglicko",
+    "price": 8.3
+  },
+  {
+    "id": "mid-raphinha",
+    "name": "Raphinha",
+    "position": "MID",
+    "team": "Braz\u00edlia",
+    "price": 8.2
+  },
+  {
+    "id": "mid-diaz",
+    "name": "D\u00edaz",
+    "position": "MID",
+    "team": "Kolumbia",
+    "price": 8.1
+  },
+  {
+    "id": "mid-pedri",
+    "name": "Pedri",
+    "position": "MID",
+    "team": "\u0160panielsko",
+    "price": 8.1
+  },
+  {
+    "id": "mid-cherki",
+    "name": "Cherki",
+    "position": "MID",
+    "team": "Franc\u00fazsko",
+    "price": 8.0
+  },
+  {
+    "id": "mid-barcola",
+    "name": "Barcola",
+    "position": "MID",
+    "team": "Franc\u00fazsko",
+    "price": 8.0
+  },
+  {
+    "id": "mid-musiala",
+    "name": "Musiala",
+    "position": "MID",
+    "team": "Nemecko",
+    "price": 8.0
+  },
+  {
+    "id": "mid-wirtz",
+    "name": "Wirtz",
+    "position": "MID",
+    "team": "Nemecko",
+    "price": 7.8
+  },
+  {
+    "id": "mid-kubo",
+    "name": "Takefusa Kubo",
+    "position": "MID",
+    "team": "Japonsko",
+    "price": 7.8
+  },
+  {
+    "id": "fwd-kane",
+    "name": "Kane",
+    "position": "FWD",
+    "team": "Anglicko",
+    "price": 10.5
+  },
+  {
+    "id": "fwd-mbappe",
+    "name": "Mbapp\u00e9",
+    "position": "FWD",
+    "team": "Franc\u00fazsko",
+    "price": 10.5
+  },
+  {
+    "id": "fwd-haaland",
+    "name": "Haaland",
+    "position": "FWD",
+    "team": "N\u00f3rsko",
+    "price": 10.5
+  },
+  {
+    "id": "fwd-messi",
+    "name": "Messi",
+    "position": "FWD",
+    "team": "Argent\u00edna",
+    "price": 10.0
+  },
+  {
+    "id": "fwd-ronaldo",
+    "name": "Cristiano Ronaldo",
+    "position": "FWD",
+    "team": "Portugalsko",
+    "price": 10.0
+  },
+  {
+    "id": "fwd-lautaro",
+    "name": "Lautaro Mart\u00ednez",
+    "position": "FWD",
+    "team": "Argent\u00edna",
+    "price": 8.8
+  },
+  {
+    "id": "fwd-alvarez",
+    "name": "Alvarez",
+    "position": "FWD",
+    "team": "Argent\u00edna",
+    "price": 8.6
+  },
+  {
+    "id": "fwd-oyarzabal",
+    "name": "Oyarzabal",
+    "position": "FWD",
+    "team": "\u0160panielsko",
+    "price": 8.1
+  },
+  {
+    "id": "fwd-gakpo",
+    "name": "Gakpo",
+    "position": "FWD",
+    "team": "Holandsko",
+    "price": 7.8
+  },
+  {
+    "id": "fwd-david",
+    "name": "Jonathan David",
+    "position": "FWD",
+    "team": "Kanada",
+    "price": 7.8
+  }
+];
 const supabaseEnabled = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 let onlineBusy = false;
 let authMode = "login";
@@ -338,21 +658,30 @@ function fantasyPlayerById(id) {
   return FANTASY_PLAYERS.find((player) => player.id === id);
 }
 
+function formatFantasyPrice(value) {
+  return `${Number(value).toFixed(1).replace(".0", "")} mil. \u20ac`;
+}
+
 function fantasyStats(profileName = state.activeProfile) {
   const picks = normalizeFantasyPicks(state.profiles[profileName]?.fantasyPicks || []);
   const players = picks.map(fantasyPlayerById).filter(Boolean);
   const spent = players.reduce((sum, player) => sum + player.price, 0);
   const counts = Object.fromEntries(Object.keys(FANTASY_LIMITS).map((position) => [position, players.filter((player) => player.position === position).length]));
-  return { picks, players, spent, remaining: FANTASY_BUDGET - spent, counts };
+  const teamCounts = players.reduce((acc, player) => {
+    acc[player.team] = (acc[player.team] || 0) + 1;
+    return acc;
+  }, {});
+  return { picks, players, spent, remaining: FANTASY_BUDGET - spent, counts, teamCounts };
 }
 
 function canAddFantasyPlayer(player, profileName = state.activeProfile) {
   const stats = fantasyStats(profileName);
-  if (!player) return { ok: false, reason: "Hráč neexistuje." };
-  if (stats.picks.includes(player.id)) return { ok: false, reason: "Hráč už je vo výbere." };
-  if (stats.picks.length >= FANTASY_SQUAD_SIZE) return { ok: false, reason: `Fantasy tím môže mať najviac ${FANTASY_SQUAD_SIZE} hráčov.` };
-  if ((stats.counts[player.position] || 0) >= FANTASY_LIMITS[player.position]) return { ok: false, reason: `Limit pre pozíciu ${FANTASY_POSITION_LABELS[player.position]} je už plný.` };
-  if (stats.spent + player.price > FANTASY_BUDGET) return { ok: false, reason: "Nemáš dosť fantasy rozpočtu." };
+  if (!player) return { ok: false, reason: "Hr\u00e1\u010d neexistuje." };
+  if (stats.picks.includes(player.id)) return { ok: false, reason: "Hr\u00e1\u010d u\u017e je vo v\u00fdbere." };
+  if (stats.picks.length >= FANTASY_SQUAD_SIZE) return { ok: false, reason: `Fantasy t\u00edm m\u00f4\u017ee ma\u0165 najviac ${FANTASY_SQUAD_SIZE} hr\u00e1\u010dov.` };
+  if ((stats.counts[player.position] || 0) >= FANTASY_LIMITS[player.position]) return { ok: false, reason: `Limit pre poz\u00edciu ${FANTASY_POSITION_LABELS[player.position]} je u\u017e pln\u00fd.` };
+  if ((stats.teamCounts[player.team] || 0) >= FANTASY_TEAM_LIMIT) return { ok: false, reason: `Z jedn\u00e9ho t\u00edmu m\u00f4\u017ee\u0161 ma\u0165 najviac ${FANTASY_TEAM_LIMIT} hr\u00e1\u010dov.` };
+  if (stats.spent + player.price > FANTASY_BUDGET) return { ok: false, reason: "Nem\u00e1\u0161 dos\u0165 fantasy rozpo\u010dtu." };
   return { ok: true };
 }
 
@@ -794,7 +1123,7 @@ function scoreGroupTeam(score, team, pickedIndex) {
 
 function renderFantasy() {
   if (!state.activeProfile || !state.profiles[state.activeProfile]) {
-    els.matches.innerHTML = `<div class="empty-state">Vytvor alebo prihlás hráča, aby si mohol skladať fantasy tím.</div>`;
+    els.matches.innerHTML = `<div class="empty-state">Vytvor alebo prihl\u00e1s hr\u00e1\u010da, aby si mohol sklada\u0165 fantasy t\u00edm.</div>`;
     return;
   }
   const position = els.fantasyPositionFilter?.value || "all";
@@ -802,49 +1131,64 @@ function renderFantasy() {
   const canEdit = canEditActiveProfile();
   const stats = fantasyStats();
   const selected = new Set(stats.picks);
+  const selectedByPosition = Object.fromEntries(Object.keys(FANTASY_LIMITS).map((key) => [key, stats.players.filter((player) => player.position === key)]));
   const available = FANTASY_PLAYERS.filter((player) =>
     (position === "all" || player.position === position) &&
     (team === "all" || player.team === team)
-  );
-  const positionSummary = Object.keys(FANTASY_LIMITS).map((key) => `${FANTASY_POSITION_LABELS[key]} ${stats.counts[key] || 0}/${FANTASY_LIMITS[key]}`).join(" · ");
+  ).sort((a, b) => b.price - a.price || a.position.localeCompare(b.position) || a.name.localeCompare(b.name, "sk"));
+  const positionSummary = Object.keys(FANTASY_LIMITS).map((key) => `${FANTASY_POSITION_LABELS[key]} ${stats.counts[key] || 0}/${FANTASY_LIMITS[key]}`).join(" \u00b7 ");
+  const renderSlot = (positionKey, index) => {
+    const player = selectedByPosition[positionKey][index];
+    if (!player) {
+      return `<div class="fantasy-slot empty"><span>${FANTASY_POSITION_LABELS[positionKey]}</span><small>vo\u013en\u00e9 miesto</small></div>`;
+    }
+    return `
+      <button class="fantasy-slot filled" type="button" data-fantasy-remove="${player.id}" ${canEdit ? "" : "disabled"} title="Odobra\u0165 ${escapeHtml(player.name)}">
+        ${flagImg(player.team)}
+        <strong>${escapeHtml(player.name)}</strong>
+        <span>${escapeHtml(player.team)}</span>
+        <small>${formatFantasyPrice(player.price)}</small>
+      </button>
+    `;
+  };
+
   els.matches.innerHTML = `
-    <section class="fantasy-board">
+    <section class="fantasy-board fantasy-board-pitch">
       <div class="fantasy-summary panel">
         <div>
-          <h3>Fantasy tím</h3>
-          <p>${stats.picks.length}/${FANTASY_SQUAD_SIZE} hráčov · ${positionSummary}</p>
-          <small>Zatiaľ testovací pool podľa tímov. Reálnych hráčov vieme neskôr importovať.</small>
+          <h3>Fantasy t\u00edm</h3>
+          <p>${stats.picks.length}/${FANTASY_SQUAD_SIZE} hr\u00e1\u010dov \u00b7 ${positionSummary}</p>
+          <small>Rozpo\u010det 100 mil. \u20ac, max. ${FANTASY_TEAM_LIMIT} hr\u00e1\u010di z jednej krajiny.</small>
         </div>
         <div class="fantasy-budget">
-          <span>${stats.spent}/${FANTASY_BUDGET}</span>
-          <small>rozpočet</small>
+          <span>${formatFantasyPrice(stats.remaining)}</span>
+          <small>zost\u00e1va</small>
         </div>
       </div>
-      <div class="fantasy-section-title">Tvoj výber</div>
-      <div class="fantasy-selected">
-        ${stats.players.length ? stats.players.map((player) => `
-          <article class="fantasy-card selected">
-            ${flagImg(player.team)}
-            <div><strong>${escapeHtml(player.name)}</strong><span>${FANTASY_POSITION_LABELS[player.position]} · ${escapeHtml(player.team)}</span></div>
-            <b>${player.price}</b>
-            <button type="button" data-fantasy-remove="${player.id}" ${canEdit ? "" : "disabled"}>Odobrať</button>
-          </article>
-        `).join("") : `<div class="empty-state">Zatiaľ nemáš vybraného hráča.</div>`}
-      </div>
-      <div class="fantasy-section-title">Pool hráčov</div>
-      <div class="fantasy-pool">
-        ${available.map((player) => {
-          const check = canAddFantasyPlayer(player);
-          const picked = selected.has(player.id);
-          return `
-            <article class="fantasy-card ${picked ? "picked" : ""}">
-              ${flagImg(player.team)}
-              <div><strong>${escapeHtml(player.name)}</strong><span>${FANTASY_POSITION_NAMES[player.position]} · ${escapeHtml(player.team)}</span></div>
-              <b>${player.price}</b>
-              <button type="button" data-fantasy-add="${player.id}" ${canEdit && !picked && check.ok ? "" : "disabled"} title="${picked ? "Už je vo výbere" : escapeHtml(check.reason || "Pridať hráča")}">${picked ? "Vybraný" : "Pridať"}</button>
-            </article>
-          `;
-        }).join("")}
+      <div class="fantasy-layout">
+        <div class="fantasy-pitch" aria-label="Tvoj fantasy t\u00edm">
+          <div class="pitch-line pitch-line-gk">${Array.from({ length: FANTASY_FORMATION.GK }, (_, index) => renderSlot("GK", index)).join("")}</div>
+          <div class="pitch-line pitch-line-def">${Array.from({ length: FANTASY_FORMATION.DEF }, (_, index) => renderSlot("DEF", index)).join("")}</div>
+          <div class="pitch-line pitch-line-mid">${Array.from({ length: FANTASY_FORMATION.MID }, (_, index) => renderSlot("MID", index)).join("")}</div>
+          <div class="pitch-line pitch-line-fwd">${Array.from({ length: FANTASY_FORMATION.FWD }, (_, index) => renderSlot("FWD", index)).join("")}</div>
+        </div>
+        <aside class="fantasy-pool-panel">
+          <div class="fantasy-section-title">Pool hr\u00e1\u010dov</div>
+          <div class="fantasy-pool">
+            ${available.map((player) => {
+              const check = canAddFantasyPlayer(player);
+              const picked = selected.has(player.id);
+              return `
+                <article class="fantasy-card ${picked ? "picked" : ""}">
+                  ${flagImg(player.team)}
+                  <div><strong>${escapeHtml(player.name)}</strong><span>${FANTASY_POSITION_NAMES[player.position]} \u00b7 ${escapeHtml(player.team)}</span></div>
+                  <b>${formatFantasyPrice(player.price)}</b>
+                  <button type="button" data-fantasy-add="${player.id}" ${canEdit && !picked && check.ok ? "" : "disabled"} title="${picked ? "U\u017e je vo v\u00fdbere" : escapeHtml(check.reason || "Prida\u0165 hr\u00e1\u010da")}">${picked ? "Vybran\u00fd" : "Prida\u0165"}</button>
+                </article>
+              `;
+            }).join("")}
+          </div>
+        </aside>
       </div>
     </section>
   `;
