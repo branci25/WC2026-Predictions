@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260602-1">
+    <link rel="stylesheet" href="styles.css?v=20260602-2">
   </head>
   <body>
     <section class="tournament-strip" aria-label="FIFA World Cup 2026">
@@ -113,6 +113,7 @@
             <button id="matchesViewBtn" class="view-tab active" type="button" role="tab" aria-selected="true">Zápasy</button>
             <button id="groupsViewBtn" class="view-tab" type="button" role="tab" aria-selected="false">Poradie skupín</button>
             <button id="knockoutViewBtn" class="view-tab" type="button" role="tab" aria-selected="false">Vyra&#271;ovacia &#269;as&#357;</button>
+            <button id="fantasyViewBtn" class="view-tab" type="button" role="tab" aria-selected="false">Fantasy</button>
           </div>
           <div class="filter-group match-filter">
             <label class="group-filter-label">
@@ -137,6 +138,20 @@
             <span class="toggle-ui" aria-hidden="true"></span>
             <span>Výsledky</span>
           </label>
+          <div class="filter-group fantasy-filters" hidden>
+            <label>
+              Poz&iacute;cia
+              <select id="fantasyPositionFilter">
+                <option value="all">V&scaron;etky poz&iacute;cie</option>
+              </select>
+            </label>
+            <label>
+              T&iacute;m
+              <select id="fantasyTeamFilter">
+                <option value="all">V&scaron;etky t&iacute;my</option>
+              </select>
+            </label>
+          </div>
         </div>
         <div id="matches" class="matches"></div>
       </section>
@@ -150,6 +165,6 @@
       </aside>
     </main>
 
-    <script src="app.js?v=20260602-1"></script>
+    <script src="app.js?v=20260602-2"></script>
   </body>
 </html>
