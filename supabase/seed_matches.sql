@@ -1,7 +1,7 @@
 -- Seed data for public.matches. Run after schema.sql.
 insert into public.matches (id, group_code, match_date, match_time, home_team, away_team, city, stadium, home_score, away_score)
 values
-  (1, 'A', '2026-06-12', '21:00', 'Mexiko', 'Južná Afrika', 'Mexico City', 'Mexico City Stadium', null, null),
+  (1, 'A', '2026-06-11', '21:00', 'Mexiko', 'Južná Afrika', 'Mexico City', 'Mexico City Stadium', null, null),
   (2, 'A', '2026-06-12', '4:00', 'Južná Kórea', 'Česko', 'Guadalajara', 'Estadio Guadalajara', null, null),
   (3, 'B', '2026-06-12', '21:00', 'Kanada', 'Bosna a Herzegovina', 'Toronto', 'Toronto Stadium', null, null),
   (4, 'D', '2026-06-13', '3:00', 'USA', 'Paraguaj', 'Los Angeles', 'Los Angeles Stadium', null, null),
