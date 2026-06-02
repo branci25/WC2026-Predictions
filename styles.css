@@ -654,8 +654,8 @@ h2 {
 }
 
 .view-tabs {
-  display: inline-grid;
-  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  display: flex;
+  flex-wrap: nowrap;
   gap: 4px;
   align-self: end;
   padding: 4px;
@@ -665,6 +665,7 @@ h2 {
 }
 
 .view-tab {
+  flex: 0 1 auto;
   height: 34px;
   border-radius: 6px;
   padding: 0 12px;
@@ -1649,6 +1650,12 @@ td:nth-child(n + 3) {
 
   .view-tabs {
     width: 100%;
+  }
+
+  .view-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-inline: 8px;
   }
 
   .search-label {
