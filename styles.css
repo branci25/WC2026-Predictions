@@ -1144,6 +1144,14 @@ h2 {
   background: rgba(255, 255, 255, 0.92);
   box-shadow: var(--shadow);
   backdrop-filter: blur(16px);
+  transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.match-card:hover,
+.match-card:focus-within {
+  border-color: rgba(52, 72, 244, 0.24);
+  background: rgba(239, 244, 255, 0.96);
+  box-shadow: 0 18px 42px rgba(52, 72, 244, 0.10);
 }
 
 .match-card.finished {
