@@ -1,5 +1,8 @@
 const MATCHES = [{"id":1,"group":"A","venue":"Mexiko City","date":"2026-06-12","time":"21:00","home":"Mexiko","away":"Južná Afrika","homeScore":5,"awayScore":3},{"id":2,"group":"A","venue":"Guadalajara","date":"2026-06-12","time":"4:00","home":"Južná Kórea","away":"Česko","homeScore":4,"awayScore":1},{"id":3,"group":"B","venue":"Toronto","date":"2026-06-12","time":"21:00","home":"Kanada","away":"Bosna a Herzegovina","homeScore":3,"awayScore":3},{"id":4,"group":"D","venue":"Los Angeles","date":"2026-06-13","time":"3:00","home":"USA","away":"Paraguaj","homeScore":null,"awayScore":null},{"id":5,"group":"B","venue":"San Francisco","date":"2026-06-13","time":"21:00","home":"Katar","away":"Švajčiarsko","homeScore":1,"awayScore":2},{"id":6,"group":"C","venue":"New Yersey","date":"2026-06-14","time":"0:00","home":"Brazília","away":"Maroko","homeScore":null,"awayScore":null},{"id":7,"group":"C","venue":"Boston","date":"2026-06-14","time":"3:00","home":"Haiti","away":"Škótsko","homeScore":null,"awayScore":null},{"id":8,"group":"D","venue":"Vancouver","date":"2026-06-14","time":"6:00","home":"Austrália","away":"Turecko","homeScore":3,"awayScore":2},{"id":9,"group":"E","venue":"Houston","date":"2026-06-14","time":"19:00","home":"Nemecko","away":"Curacao","homeScore":null,"awayScore":null},{"id":10,"group":"F","venue":"Dallas","date":"2026-06-14","time":"22:00","home":"Holandsko","away":"Japonsko","homeScore":null,"awayScore":null},{"id":11,"group":"E","venue":"Philadelphia","date":"2026-06-15","time":"1:00","home":"Pobrežie Slonoviny","away":"Ekvádor","homeScore":null,"awayScore":null},{"id":12,"group":"F","venue":"Monterrey","date":"2026-06-15","time":"4:00","home":"Švédsko","away":"Tunisko","homeScore":null,"awayScore":null},{"id":13,"group":"H","venue":"Atlanta","date":"2026-06-15","time":"18:00","home":"Španielsko","away":"Kapverdy","homeScore":null,"awayScore":null},{"id":14,"group":"G","venue":"Seattle","date":"2026-06-15","time":"21:00","home":"Belgicko","away":"Egypt","homeScore":null,"awayScore":null},{"id":15,"group":"H","venue":"Miami","date":"2026-06-16","time":"0:00","home":"Saudská Arábia","away":"Uruguaj","homeScore":null,"awayScore":null},{"id":16,"group":"G","venue":"Los Angeles","date":"2026-06-16","time":"3:00","home":"Irán","away":"Nový Zéland","homeScore":null,"awayScore":null},{"id":17,"group":"I","venue":"New York","date":"2026-06-16","time":"21:00","home":"Francúzsko","away":"Senegal","homeScore":null,"awayScore":null},{"id":18,"group":"I","venue":"","date":"2026-06-17","time":"0:00","home":"Irak","away":"Nórsko","homeScore":null,"awayScore":null},{"id":19,"group":"J","venue":"","date":"2026-06-17","time":"3:00","home":"Argentína","away":"Alžírsko","homeScore":null,"awayScore":null},{"id":20,"group":"J","venue":"","date":"2026-06-17","time":"6:00","home":"Rakúsko","away":"Jordánsko","homeScore":null,"awayScore":null},{"id":21,"group":"K","venue":"","date":"2026-06-17","time":"19:00","home":"Portugalsko","away":"DR Kongo","homeScore":null,"awayScore":null},{"id":22,"group":"L","venue":"","date":"2026-06-17","time":"22:00","home":"Anglicko","away":"Chorvátsko","homeScore":null,"awayScore":null},{"id":23,"group":"L","venue":"","date":"2026-06-18","time":"1:00","home":"Ghana","away":"Panama","homeScore":null,"awayScore":null},{"id":24,"group":"K","venue":"","date":"2026-06-18","time":"4:00","home":"Uzbekistan","away":"Kolumbia","homeScore":null,"awayScore":null},{"id":25,"group":"A","venue":"","date":"2026-06-18","time":"18:00","home":"Česko","away":"Južná Afrika","homeScore":null,"awayScore":null},{"id":26,"group":"B","venue":"","date":"2026-06-18","time":"21:00","home":"Švajčiarsko","away":"Bosna a Herzegovina","homeScore":2,"awayScore":1},{"id":27,"group":"B","venue":"","date":"2026-06-19","time":"0:00","home":"Kanada","away":"Katar","homeScore":3,"awayScore":4},{"id":28,"group":"A","venue":"","date":"2026-06-19","time":"3:00","home":"Mexiko","away":"Južná Kórea","homeScore":null,"awayScore":null},{"id":29,"group":"D","venue":"","date":"2026-06-19","time":"21:00","home":"USA","away":"Austrália","homeScore":null,"awayScore":null},{"id":30,"group":"C","venue":"","date":"2026-06-20","time":"0:00","home":"Škótsko","away":"Maroko","homeScore":null,"awayScore":null},{"id":31,"group":"C","venue":"","date":"2026-06-20","time":"2:30","home":"Brazília","away":"Haiti","homeScore":null,"awayScore":null},{"id":32,"group":"D","venue":"","date":"2026-06-20","time":"5:00","home":"Turecko","away":"Paraguaj","homeScore":null,"awayScore":null},{"id":33,"group":"F","venue":"","date":"2026-06-20","time":"19:00","home":"Holandsko","away":"Švédsko","homeScore":null,"awayScore":null},{"id":34,"group":"E","venue":"","date":"2026-06-20","time":"22:00","home":"Nemecko","away":"Pobrežie Slonoviny","homeScore":null,"awayScore":null},{"id":35,"group":"E","venue":"","date":"2026-06-21","time":"2:00","home":"Ekvádor","away":"Curacao","homeScore":null,"awayScore":null},{"id":36,"group":"F","venue":"","date":"2026-06-21","time":"6:00","home":"Tunisko","away":"Japonsko","homeScore":null,"awayScore":null},{"id":37,"group":"H","venue":"","date":"2026-06-21","time":"18:00","home":"Španielsko","away":"Saudská Arábia","homeScore":null,"awayScore":null},{"id":38,"group":"G","venue":"","date":"2026-06-21","time":"21:00","home":"Belgicko","away":"Irán","homeScore":null,"awayScore":null},{"id":39,"group":"H","venue":"","date":"2026-06-22","time":"0:00","home":"Uruguaj","away":"Kapverdy","homeScore":null,"awayScore":null},{"id":40,"group":"G","venue":"","date":"2026-06-22","time":"3:00","home":"Nový Zéland","away":"Egypt","homeScore":null,"awayScore":null},{"id":41,"group":"J","venue":"","date":"2026-06-22","time":"19:00","home":"Argentína","away":"Rakúsko","homeScore":null,"awayScore":null},{"id":42,"group":"I","venue":"","date":"2026-06-22","time":"23:00","home":"Francúzsko","away":"Irak","homeScore":null,"awayScore":null},{"id":43,"group":"I","venue":"","date":"2026-06-23","time":"2:00","home":"Nórsko","away":"Senegal","homeScore":null,"awayScore":null},{"id":44,"group":"J","venue":"","date":"2026-06-23","time":"5:00","home":"Jordánsko","away":"Alžírsko","homeScore":null,"awayScore":null},{"id":45,"group":"K","venue":"","date":"2026-06-23","time":"19:00","home":"Portugalsko","away":"Uzbekistan","homeScore":null,"awayScore":null},{"id":46,"group":"L","venue":"","date":"2026-06-23","time":"22:00","home":"Anglicko","away":"Ghana","homeScore":null,"awayScore":null},{"id":47,"group":"L","venue":"","date":"2026-06-24","time":"1:00","home":"Panama","away":"Chorvátsko","homeScore":null,"awayScore":null},{"id":48,"group":"K","venue":"","date":"2026-06-24","time":"4:00","home":"Kolumbia","away":"DR Kongo","homeScore":null,"awayScore":null},{"id":49,"group":"B","venue":"","date":"2026-06-24","time":"21:00","home":"Švajčiarsko","away":"Kanada","homeScore":null,"awayScore":null},{"id":50,"group":"B","venue":"","date":"2026-06-24","time":"21:00","home":"Bosna a Herzegovina","away":"Katar","homeScore":null,"awayScore":null},{"id":51,"group":"C","venue":"","date":"2026-06-25","time":"0:00","home":"Maroko","away":"Haiti","homeScore":null,"awayScore":null},{"id":52,"group":"C","venue":"","date":"2026-06-25","time":"0:00","home":"Škótsko","away":"Brazília","homeScore":null,"awayScore":null},{"id":53,"group":"A","venue":"","date":"2026-06-25","time":"3:00","home":"Južná Afrika","away":"Južná Kórea","homeScore":null,"awayScore":null},{"id":54,"group":"A","venue":"","date":"2026-06-25","time":"3:00","home":"Česko","away":"Mexiko","homeScore":null,"awayScore":null},{"id":55,"group":"E","venue":"","date":"2026-06-25","time":"22:00","home":"Curacao","away":"Pobrežie Slonoviny","homeScore":null,"awayScore":null},{"id":56,"group":"E","venue":"","date":"2026-06-25","time":"22:00","home":"Ekvádor","away":"Nemecko","homeScore":null,"awayScore":null},{"id":57,"group":"F","venue":"","date":"2026-06-26","time":"1:00","home":"Tunisko","away":"Holandsko","homeScore":null,"awayScore":null},{"id":58,"group":"F","venue":"","date":"2026-06-26","time":"1:00","home":"Japonsko","away":"Švédsko","homeScore":null,"awayScore":null},{"id":59,"group":"D","venue":"","date":"2026-06-26","time":"4:00","home":"Turecko","away":"USA","homeScore":null,"awayScore":null},{"id":60,"group":"D","venue":"","date":"2026-06-26","time":"4:00","home":"Paraguaj","away":"Austrália","homeScore":null,"awayScore":null},{"id":61,"group":"I","venue":"","date":"2026-06-26","time":"21:00","home":"Nórsko","away":"Francúzsko","homeScore":null,"awayScore":null},{"id":62,"group":"I","venue":"","date":"2026-06-26","time":"21:00","home":"Senegal","away":"Irak","homeScore":null,"awayScore":null},{"id":63,"group":"H","venue":"","date":"2026-06-27","time":"2:00","home":"Kapverdy","away":"Saudská Arábia","homeScore":null,"awayScore":null},{"id":64,"group":"H","venue":"","date":"2026-06-27","time":"2:00","home":"Uruguaj","away":"Španielsko","homeScore":null,"awayScore":null},{"id":65,"group":"G","venue":"","date":"2026-06-27","time":"5:00","home":"Nový Zéland","away":"Belgicko","homeScore":null,"awayScore":null},{"id":66,"group":"G","venue":"","date":"2026-06-27","time":"5:00","home":"Egypt","away":"Irán","homeScore":null,"awayScore":null},{"id":67,"group":"L","venue":"","date":"2026-06-27","time":"23:00","home":"Panama","away":"Anglicko","homeScore":null,"awayScore":null},{"id":68,"group":"L","venue":"","date":"2026-06-27","time":"23:00","home":"Chorvátsko","away":"Ghana","homeScore":null,"awayScore":null},{"id":69,"group":"K","venue":"","date":"2026-06-28","time":"1:30","home":"Kolumbia","away":"Portugalsko","homeScore":null,"awayScore":null},{"id":70,"group":"K","venue":"","date":"2026-06-28","time":"1:30","home":"DR Kongo","away":"Uzbekistan","homeScore":null,"awayScore":null},{"id":71,"group":"J","venue":"","date":"2026-06-28","time":"4:00","home":"Alžírsko","away":"Rakúsko","homeScore":null,"awayScore":null},{"id":72,"group":"J","venue":"","date":"2026-06-28","time":"4:00","home":"Jordánsko","away":"Argentína","homeScore":null,"awayScore":null}];
 
+const KNOCKOUT_MATCHES = [{"id":73,"group":"KO","round":"1/16-fin\u00e1le","venue":"","stadium":"","date":"2026-06-29","time":"18:00","home":"V\u00ed\u0165az A","away":"3. miesto C/D/E/F","homeScore":null,"awayScore":null},{"id":74,"group":"KO","round":"1/16-fin\u00e1le","venue":"","stadium":"","date":"2026-06-29","time":"21:00","home":"2. miesto A","away":"2. miesto B","homeScore":null,"awayScore":null},{"id":75,"group":"KO","round":"1/16-fin\u00e1le","venue":"","stadium":"","date":"2026-06-30","time":"18:00","home":"V\u00ed\u0165az B","away":"3. miesto E/F/G/H","homeScore":null,"awayScore":null},{"id":76,"group":"KO","round":"1/16-fin\u00e1le","venue":"","stadium":"","date":"2026-06-30","time":"21:00","home":"V\u00ed\u0165az C","away":"3. miesto A/B/F/I","homeScore":null,"awayScore":null},{"id":77,"group":"KO","round":"1/16-fin\u00e1le","venue":"","stadium":"","date":"2026-07-01","time":"18:00","home":"V\u00ed\u0165az D","away":"3. miesto B/E/H/J","homeScore":null,"awayScore":null},{"id":78,"group":"KO","round":"1/16-fin\u00e1le","venue":"","stadium":"","date":"2026-07-01","time":"21:00","home":"V\u00ed\u0165az E","away":"3. miesto A/D/I/J","homeScore":null,"awayScore":null},{"id":79,"group":"KO","round":"1/16-fin\u00e1le","venue":"","stadium":"","date":"2026-07-02","time":"18:00","home":"V\u00ed\u0165az F","away":"2. miesto C","homeScore":null,"awayScore":null},{"id":80,"group":"KO","round":"1/16-fin\u00e1le","venue":"","stadium":"","date":"2026-07-02","time":"21:00","home":"V\u00ed\u0165az G","away":"2. miesto H","homeScore":null,"awayScore":null},{"id":81,"group":"KO","round":"1/16-fin\u00e1le","venue":"","stadium":"","date":"2026-07-03","time":"18:00","home":"V\u00ed\u0165az H","away":"2. miesto G","homeScore":null,"awayScore":null},{"id":82,"group":"KO","round":"1/16-fin\u00e1le","venue":"","stadium":"","date":"2026-07-03","time":"21:00","home":"V\u00ed\u0165az I","away":"2. miesto J","homeScore":null,"awayScore":null},{"id":83,"group":"KO","round":"1/16-fin\u00e1le","venue":"","stadium":"","date":"2026-07-04","time":"18:00","home":"V\u00ed\u0165az J","away":"2. miesto I","homeScore":null,"awayScore":null},{"id":84,"group":"KO","round":"1/16-fin\u00e1le","venue":"","stadium":"","date":"2026-07-04","time":"21:00","home":"V\u00ed\u0165az K","away":"2. miesto L","homeScore":null,"awayScore":null},{"id":85,"group":"KO","round":"1/16-fin\u00e1le","venue":"","stadium":"","date":"2026-07-05","time":"18:00","home":"V\u00ed\u0165az L","away":"2. miesto K","homeScore":null,"awayScore":null},{"id":86,"group":"KO","round":"1/16-fin\u00e1le","venue":"","stadium":"","date":"2026-07-05","time":"21:00","home":"2. miesto D","away":"2. miesto E","homeScore":null,"awayScore":null},{"id":87,"group":"KO","round":"1/16-fin\u00e1le","venue":"","stadium":"","date":"2026-07-06","time":"18:00","home":"2. miesto F","away":"3. miesto G/H/K/L","homeScore":null,"awayScore":null},{"id":88,"group":"KO","round":"1/16-fin\u00e1le","venue":"","stadium":"","date":"2026-07-06","time":"21:00","home":"2. miesto C","away":"3. miesto A/B/K/L","homeScore":null,"awayScore":null},{"id":89,"group":"KO","round":"Osemfin\u00e1le","venue":"","stadium":"","date":"2026-07-07","time":"18:00","home":"V\u00ed\u0165az 73","away":"V\u00ed\u0165az 74","homeScore":null,"awayScore":null},{"id":90,"group":"KO","round":"Osemfin\u00e1le","venue":"","stadium":"","date":"2026-07-07","time":"21:00","home":"V\u00ed\u0165az 75","away":"V\u00ed\u0165az 76","homeScore":null,"awayScore":null},{"id":91,"group":"KO","round":"Osemfin\u00e1le","venue":"","stadium":"","date":"2026-07-07","time":"18:00","home":"V\u00ed\u0165az 77","away":"V\u00ed\u0165az 78","homeScore":null,"awayScore":null},{"id":92,"group":"KO","round":"Osemfin\u00e1le","venue":"","stadium":"","date":"2026-07-07","time":"21:00","home":"V\u00ed\u0165az 79","away":"V\u00ed\u0165az 80","homeScore":null,"awayScore":null},{"id":93,"group":"KO","round":"Osemfin\u00e1le","venue":"","stadium":"","date":"2026-07-08","time":"18:00","home":"V\u00ed\u0165az 81","away":"V\u00ed\u0165az 82","homeScore":null,"awayScore":null},{"id":94,"group":"KO","round":"Osemfin\u00e1le","venue":"","stadium":"","date":"2026-07-08","time":"21:00","home":"V\u00ed\u0165az 83","away":"V\u00ed\u0165az 84","homeScore":null,"awayScore":null},{"id":95,"group":"KO","round":"Osemfin\u00e1le","venue":"","stadium":"","date":"2026-07-08","time":"18:00","home":"V\u00ed\u0165az 85","away":"V\u00ed\u0165az 86","homeScore":null,"awayScore":null},{"id":96,"group":"KO","round":"Osemfin\u00e1le","venue":"","stadium":"","date":"2026-07-08","time":"21:00","home":"V\u00ed\u0165az 87","away":"V\u00ed\u0165az 88","homeScore":null,"awayScore":null},{"id":97,"group":"KO","round":"\u0160tvr\u0165fin\u00e1le","venue":"","stadium":"","date":"2026-07-10","time":"18:00","home":"V\u00ed\u0165az 89","away":"V\u00ed\u0165az 90","homeScore":null,"awayScore":null},{"id":98,"group":"KO","round":"\u0160tvr\u0165fin\u00e1le","venue":"","stadium":"","date":"2026-07-10","time":"21:00","home":"V\u00ed\u0165az 91","away":"V\u00ed\u0165az 92","homeScore":null,"awayScore":null},{"id":99,"group":"KO","round":"\u0160tvr\u0165fin\u00e1le","venue":"","stadium":"","date":"2026-07-11","time":"18:00","home":"V\u00ed\u0165az 93","away":"V\u00ed\u0165az 94","homeScore":null,"awayScore":null},{"id":100,"group":"KO","round":"\u0160tvr\u0165fin\u00e1le","venue":"","stadium":"","date":"2026-07-11","time":"21:00","home":"V\u00ed\u0165az 95","away":"V\u00ed\u0165az 96","homeScore":null,"awayScore":null},{"id":101,"group":"KO","round":"Semifin\u00e1le","venue":"","stadium":"","date":"2026-07-14","time":"21:00","home":"V\u00ed\u0165az 97","away":"V\u00ed\u0165az 98","homeScore":null,"awayScore":null},{"id":102,"group":"KO","round":"Semifin\u00e1le","venue":"","stadium":"","date":"2026-07-15","time":"21:00","home":"V\u00ed\u0165az 99","away":"V\u00ed\u0165az 100","homeScore":null,"awayScore":null},{"id":103,"group":"KO","round":"O 3. miesto","venue":"","stadium":"","date":"2026-07-18","time":"21:00","home":"Porazen\u00fd 101","away":"Porazen\u00fd 102","homeScore":null,"awayScore":null},{"id":104,"group":"KO","round":"Fin\u00e1le","venue":"","stadium":"","date":"2026-07-19","time":"21:00","home":"V\u00ed\u0165az 101","away":"V\u00ed\u0165az 102","homeScore":null,"awayScore":null}];
+const ALL_MATCHES = [...MATCHES, ...KNOCKOUT_MATCHES];
+
 const MATCH_VENUES = {
   1: ["Mexico City", "Mexico City Stadium"], 2: ["Guadalajara", "Estadio Guadalajara"], 3: ["Toronto", "Toronto Stadium"], 4: ["Los Angeles", "Los Angeles Stadium"],
   5: ["San Francisco Bay Area", "San Francisco Bay Area Stadium"], 6: ["New York New Jersey", "New York New Jersey Stadium"], 7: ["Boston", "Boston Stadium"], 8: ["Vancouver", "BC Place Vancouver"],
@@ -221,6 +224,8 @@ const els = {
   adminToggle: document.querySelector(".admin-toggle"),
   matchesViewBtn: document.querySelector("#matchesViewBtn"),
   groupsViewBtn: document.querySelector("#groupsViewBtn"),
+  knockoutViewBtn: document.querySelector("#knockoutViewBtn"),
+  groupFilterLabel: document.querySelector(".group-filter-label"),
   matches: document.querySelector("#matches"),
   leaderboard: document.querySelector("#leaderboard"),
   groupTables: document.querySelector("#groupTables"),
@@ -245,7 +250,7 @@ function loadState() {
 }
 
 function defaultState() {
-  const results = Object.fromEntries(MATCHES.map((match) => [
+  const results = Object.fromEntries(ALL_MATCHES.map((match) => [
     match.id,
     { home: null, away: null },
   ]));
@@ -281,7 +286,7 @@ function normalizeState(saved) {
       groupPicks: normalizeGroupPicks(merged.profiles[name].groupPicks),
     };
   });
-  if (!["matches", "groups"].includes(merged.activeView)) merged.activeView = "matches";
+  if (!["matches", "groups", "knockout"].includes(merged.activeView)) merged.activeView = "matches";
   if (!merged.profiles[merged.activeProfile]) merged.activeProfile = Object.keys(merged.profiles)[0] || "";
   if (!merged.sessions?.[merged.authProfile]) merged.authProfile = "";
   return merged;
@@ -293,7 +298,7 @@ function save() {
 }
 
 function byId(id) {
-  return MATCHES.find((match) => match.id === Number(id));
+  return ALL_MATCHES.find((match) => String(match.id) === String(id));
 }
 
 function cleanScore(value) {
@@ -356,7 +361,7 @@ function profileStats(profileName) {
   let matchPoints = 0;
   let settled = 0;
   let tipped = 0;
-  MATCHES.forEach((match) => {
+  ALL_MATCHES.forEach((match) => {
     const tip = state.profiles[profileName]?.tips?.[match.id];
     if (tip?.home !== null && tip?.away !== null && tip?.home !== undefined && tip?.away !== undefined) tipped += 1;
     const score = scoreTip(match, profileName);
@@ -511,6 +516,7 @@ function formatDate(value) {
 }
 
 function flagImg(team) {
+  if (/^(\u0056\u00ed\u0165az|Porazen\u00fd|[23]\. miesto)/u.test(team)) return "";
   const code = FLAG_CODES[team];
   const fallback = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 24"><rect width="36" height="24" rx="3" fill="#eff4f0"/><path d="M7 16h22M7 8h22" stroke="#1f6f54" stroke-width="3" stroke-linecap="round"/><rect width="36" height="24" rx="3" fill="none" stroke="rgba(0,0,0,.25)"/></svg>`;
   const fallbackUrl = `data:image/svg+xml,${encodeURIComponent(fallback)}`;
@@ -601,16 +607,23 @@ function renderLeaderboard() {
 
 function renderViewTabs() {
   const isMatches = state.activeView === "matches";
+  const isGroups = state.activeView === "groups";
+  const isKnockout = state.activeView === "knockout";
   els.matchesViewBtn.classList.toggle("active", isMatches);
-  els.groupsViewBtn.classList.toggle("active", !isMatches);
+  els.groupsViewBtn.classList.toggle("active", isGroups);
+  els.knockoutViewBtn.classList.toggle("active", isKnockout);
   els.matchesViewBtn.setAttribute("aria-selected", String(isMatches));
-  els.groupsViewBtn.setAttribute("aria-selected", String(!isMatches));
+  els.groupsViewBtn.setAttribute("aria-selected", String(isGroups));
+  els.knockoutViewBtn.setAttribute("aria-selected", String(isKnockout));
   document.querySelectorAll(".match-filter").forEach((el) => {
-    el.hidden = !isMatches;
+    el.hidden = isGroups;
   });
+  if (els.groupFilterLabel) els.groupFilterLabel.hidden = !isMatches;
 }
 
 function renderMatches() {
+  const isKnockout = state.activeView === "knockout";
+  const sourceMatches = isKnockout ? KNOCKOUT_MATCHES : MATCHES;
   const group = els.groupFilter.value || "all";
   const status = els.statusFilter.value || "all";
   const query = els.searchInput.value.trim().toLowerCase();
@@ -618,13 +631,13 @@ function renderMatches() {
   const canEdit = canEditActiveProfile();
   const now = Date.now();
 
-  const filtered = MATCHES.filter((match) => {
+  const filtered = sourceMatches.filter((match) => {
     const finished = isFinished(match);
-    if (group !== "all" && match.group !== group) return false;
+    if (!isKnockout && group !== "all" && match.group !== group) return false;
     if (status === "open" && finished) return false;
     if (status === "finished" && !finished) return false;
     if (!query) return true;
-    return [match.home, match.away, match.venue, match.group].join(" ").toLowerCase().includes(query);
+    return [match.home, match.away, match.venue, match.group, match.round].join(" ").toLowerCase().includes(query);
   });
 
   if (!filtered.length) {
@@ -641,13 +654,14 @@ function renderMatches() {
     const canEditTip = canEdit && !tipLocked;
     const joker = isJoker(state.activeProfile, match.id);
     const jokerLabel = joker ? "\u017dol\u00edk x2" : `\u017dol\u00edk ${jokerCount()}/${MAX_JOKERS}`;
+    const metaLabel = match.round || `Skupina ${match.group}`;
     return `
       <article class="match-card ${finished ? "finished" : ""} ${tipLocked ? "tip-locked" : ""}">
         <div class="match-meta">
           <span class="match-kickoff"><span class="match-date">${formatDate(match.date)}</span><span class="match-time">${match.time}</span></span>
           <span class="match-venue">${match.venue || ""}</span>
           <span class="match-stadium">${match.stadium || ""}</span>
-          <span class="group-badge">Skupina ${match.group}</span>
+          <span class="group-badge">${metaLabel}</span>
         </div>
         <div class="team home"><span class="team-name">${match.home}</span>${flagImg(match.home)}</div>
         <div class="score-stack">
@@ -1063,6 +1077,12 @@ function bindEvents() {
 
   els.groupsViewBtn.addEventListener("click", () => {
     state.activeView = "groups";
+    save();
+    renderAll();
+  });
+
+  els.knockoutViewBtn.addEventListener("click", () => {
+    state.activeView = "knockout";
     save();
     renderAll();
   });

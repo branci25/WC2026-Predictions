@@ -1529,3 +1529,5 @@ td:nth-child(n + 3) {
     justify-content: flex-end;
   }
 }
+
+.team:empty { display: none; }
