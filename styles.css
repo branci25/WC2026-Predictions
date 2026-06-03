@@ -1270,42 +1270,41 @@ h2 {
 }
 
 
-.game-board {
+.runner-board {
   display: grid;
-  gap: 14px;
-}
-
-.game-summary {
-  display: grid;
-  grid-template-columns: 1fr auto;
   gap: 16px;
-  align-items: center;
   padding: 22px;
 }
 
-.game-summary h3,
-.game-card h3 {
+.runner-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  align-items: center;
+}
+
+.runner-head h3 {
   margin: 0;
   color: var(--ink);
-  font-size: 24px;
+  font-size: 28px;
 }
 
-.game-summary p,
-.game-card p {
+.runner-head p {
   margin: 6px 0 0;
   color: var(--muted);
+  font-size: 15px;
 }
 
-.game-stats {
+.runner-stats {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   justify-content: flex-end;
 }
 
-.game-stat {
-  min-width: 76px;
-  padding: 8px 12px;
+.runner-stats div {
+  min-width: 82px;
+  padding: 9px 12px;
   border: 1px solid rgba(52, 64, 246, 0.2);
   border-radius: 8px;
   background: rgba(52, 64, 246, 0.08);
@@ -1313,119 +1312,59 @@ h2 {
   text-align: center;
 }
 
-.game-stat strong {
+.runner-stats strong {
   display: block;
-  font-size: 22px;
+  font-size: 24px;
   line-height: 1;
 }
 
-.game-stat span {
+.runner-stats span {
   display: block;
-  margin-top: 4px;
+  margin-top: 5px;
   color: var(--muted);
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
 }
 
-.game-card {
-  display: grid;
-  gap: 18px;
-  padding: 24px;
-}
-
-.game-clues {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.game-clue {
-  display: inline-flex;
-  align-items: center;
-  min-height: 34px;
-  padding: 0 12px;
-  border: 1px solid rgba(52, 64, 246, 0.18);
-  border-radius: 999px;
-  background: rgba(52, 64, 246, 0.07);
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.game-options {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.game-option {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 12px;
-  align-items: center;
-  min-height: 66px;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+.runner-stage {
+  overflow: hidden;
+  border: 1px solid rgba(52, 64, 246, 0.22);
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.86);
-  color: var(--ink);
-  text-align: left;
-  font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.64);
 }
 
-.game-option:hover:not(:disabled),
-.game-option:focus-visible:not(:disabled) {
-  border-color: rgba(52, 64, 246, 0.45);
-  background: rgba(52, 64, 246, 0.08);
+#runnerCanvas {
+  display: block;
+  width: 100%;
+  height: 280px;
+  touch-action: manipulation;
+  cursor: pointer;
 }
 
-.game-option:disabled {
-  opacity: 1;
-  cursor: default;
-}
-
-.game-option.correct {
-  border-color: rgba(19, 143, 76, 0.46);
-  background: rgba(19, 143, 76, 0.12);
-  color: #0b7a41;
-}
-
-.game-option.wrong {
-  border-color: rgba(222, 52, 52, 0.36);
-  background: rgba(222, 52, 52, 0.1);
-  color: #b42318;
-}
-
-.game-option-index {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: var(--primary);
-  color: #fff;
-  font-size: 13px;
-}
-
-.game-result {
+.runner-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 46px;
-  padding-top: 4px;
   color: var(--muted);
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 600;
 }
 
-.game-next {
-  height: 40px;
-  padding: 0 16px;
+.runner-actions button {
+  min-width: 118px;
+  height: 42px;
   border-radius: 8px;
   background: var(--primary);
   color: #fff;
   font-weight: 800;
+}
+
+.runner-actions button:hover,
+.runner-actions button:focus-visible {
+  background: #2430d8;
 }
 
 .score-stack {
@@ -1833,29 +1772,28 @@ td:nth-child(n + 3) {
     padding-inline: 10px;
   }
 
-  .game-summary {
-    grid-template-columns: 1fr;
-    padding: 18px;
+  .runner-board {
+    padding: 16px;
   }
 
-  .game-stats {
+  .runner-head {
+    grid-template-columns: 1fr;
+  }
+
+  .runner-stats {
     justify-content: stretch;
   }
 
-  .game-stat {
+  .runner-stats div {
     flex: 1;
     min-width: 0;
   }
 
-  .game-card {
-    padding: 18px;
+  #runnerCanvas {
+    height: 240px;
   }
 
-  .game-options {
-    grid-template-columns: 1fr;
-  }
-
-  .game-result {
+  .runner-actions {
     align-items: stretch;
     flex-direction: column;
   }
