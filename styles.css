@@ -1269,104 +1269,6 @@ h2 {
   box-shadow: 0 1px 2px rgba(18, 32, 29, 0.18);
 }
 
-
-.runner-board {
-  display: grid;
-  gap: 16px;
-  padding: 22px;
-}
-
-.runner-head {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 18px;
-  align-items: center;
-}
-
-.runner-head h3 {
-  margin: 0;
-  color: var(--ink);
-  font-size: 28px;
-}
-
-.runner-head p {
-  margin: 6px 0 0;
-  color: var(--muted);
-  font-size: 15px;
-}
-
-.runner-stats {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.runner-stats div {
-  min-width: 82px;
-  padding: 9px 12px;
-  border: 1px solid rgba(52, 64, 246, 0.2);
-  border-radius: 8px;
-  background: rgba(52, 64, 246, 0.08);
-  color: var(--primary);
-  text-align: center;
-}
-
-.runner-stats strong {
-  display: block;
-  font-size: 24px;
-  line-height: 1;
-}
-
-.runner-stats span {
-  display: block;
-  margin-top: 5px;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.runner-stage {
-  overflow: hidden;
-  border: 1px solid rgba(52, 64, 246, 0.22);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.86);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.64);
-}
-
-#runnerCanvas {
-  display: block;
-  width: 100%;
-  height: 280px;
-  touch-action: manipulation;
-  cursor: pointer;
-}
-
-.runner-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  color: var(--muted);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.runner-actions button {
-  min-width: 118px;
-  height: 42px;
-  border-radius: 8px;
-  background: var(--primary);
-  color: #fff;
-  font-weight: 800;
-}
-
-.runner-actions button:hover,
-.runner-actions button:focus-visible {
-  background: #2430d8;
-}
-
 .score-stack {
   position: relative;
   grid-column: 2;
@@ -1770,32 +1672,6 @@ td:nth-child(n + 3) {
     flex: 0 0 auto;
     min-width: 86px;
     padding-inline: 10px;
-  }
-
-  .runner-board {
-    padding: 16px;
-  }
-
-  .runner-head {
-    grid-template-columns: 1fr;
-  }
-
-  .runner-stats {
-    justify-content: stretch;
-  }
-
-  .runner-stats div {
-    flex: 1;
-    min-width: 0;
-  }
-
-  #runnerCanvas {
-    height: 240px;
-  }
-
-  .runner-actions {
-    align-items: stretch;
-    flex-direction: column;
   }
 
   .search-label {

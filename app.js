@@ -525,21 +525,6 @@ const FLAG_CODES = {
 };
 
 const state = loadState();
-let runnerGame = {
-  score: 0,
-  best: Number(localStorage.getItem("MS2026_RUNNER_BEST") || 0),
-  running: false,
-  over: false,
-  playerY: 0,
-  velocity: 0,
-  obstacles: [],
-  nextSpawn: 900,
-  speed: 265,
-  lastTime: 0,
-  raf: null,
-  canvas: null,
-  ctx: null,
-};
 const els = {
   authLoggedOut: document.querySelector("#authLoggedOut"),
   authLoggedIn: document.querySelector("#authLoggedIn"),
@@ -572,7 +557,6 @@ const els = {
   groupsViewBtn: document.querySelector("#groupsViewBtn"),
   knockoutViewBtn: document.querySelector("#knockoutViewBtn"),
   fantasyViewBtn: document.querySelector("#fantasyViewBtn"),
-  gameViewBtn: document.querySelector("#gameViewBtn"),
   fantasyPositionFilter: document.querySelector("#fantasyPositionFilter"),
   fantasyTeamFilter: document.querySelector("#fantasyTeamFilter"),
   fantasyFilters: document.querySelector(".fantasy-filters"),
@@ -638,7 +622,7 @@ function normalizeState(saved) {
       fantasyPicks: normalizeFantasyPicks(merged.profiles[name].fantasyPicks),
     };
   });
-  if (!["matches", "groups", "knockout", "fantasy", "game"].includes(merged.activeView)) merged.activeView = "matches";
+  if (!["matches", "groups", "knockout", "fantasy"].includes(merged.activeView)) merged.activeView = "matches";
   if (!merged.profiles[merged.activeProfile]) merged.activeProfile = Object.keys(merged.profiles)[0] || "";
   if (!merged.sessions?.[merged.authProfile]) merged.authProfile = "";
   return merged;
@@ -1011,19 +995,16 @@ function renderViewTabs() {
   const isGroups = state.activeView === "groups";
   const isKnockout = state.activeView === "knockout";
   const isFantasy = state.activeView === "fantasy";
-  const isGame = state.activeView === "game";
   els.matchesViewBtn.classList.toggle("active", isMatches);
   els.groupsViewBtn.classList.toggle("active", isGroups);
   els.knockoutViewBtn.classList.toggle("active", isKnockout);
   els.fantasyViewBtn.classList.toggle("active", isFantasy);
-  els.gameViewBtn?.classList.toggle("active", isGame);
   els.matchesViewBtn.setAttribute("aria-selected", String(isMatches));
   els.groupsViewBtn.setAttribute("aria-selected", String(isGroups));
   els.knockoutViewBtn.setAttribute("aria-selected", String(isKnockout));
   els.fantasyViewBtn.setAttribute("aria-selected", String(isFantasy));
-  els.gameViewBtn?.setAttribute("aria-selected", String(isGame));
   document.querySelectorAll(".match-filter").forEach((el) => {
-    el.hidden = isGroups || isFantasy || isGame;
+    el.hidden = isGroups || isFantasy;
   });
   if (els.groupFilterLabel) els.groupFilterLabel.hidden = !isMatches;
   if (els.fantasyFilters) els.fantasyFilters.hidden = !isFantasy;
@@ -1213,258 +1194,6 @@ function renderFantasy() {
   `;
 }
 
-
-function runnerReset() {
-  runnerGame.score = 0;
-  runnerGame.running = false;
-  runnerGame.over = false;
-  runnerGame.playerY = 0;
-  runnerGame.velocity = 0;
-  runnerGame.obstacles = [];
-  runnerGame.nextSpawn = 820;
-  runnerGame.speed = 265;
-  runnerGame.lastTime = 0;
-}
-
-function runnerResizeCanvas() {
-  if (!runnerGame.canvas) return;
-  const rect = runnerGame.canvas.getBoundingClientRect();
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const width = Math.max(320, Math.floor(rect.width));
-  const height = Math.max(220, Math.floor(rect.height));
-  runnerGame.canvas.width = Math.floor(width * dpr);
-  runnerGame.canvas.height = Math.floor(height * dpr);
-  runnerGame.ctx = runnerGame.canvas.getContext("2d");
-  runnerGame.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-}
-
-function runnerBounds() {
-  const width = runnerGame.canvas ? runnerGame.canvas.getBoundingClientRect().width : 760;
-  const height = runnerGame.canvas ? runnerGame.canvas.getBoundingClientRect().height : 260;
-  const ground = height - 42;
-  return { width, height, ground };
-}
-
-function runnerPlayerBox() {
-  const { ground } = runnerBounds();
-  return { x: 62, y: ground - 50 - runnerGame.playerY, w: 34, h: 50 };
-}
-
-function runnerObstacleBox(obstacle) {
-  const { ground } = runnerBounds();
-  if (obstacle.type === "ball") return { x: obstacle.x, y: ground - 25, w: 25, h: 25 };
-  if (obstacle.type === "trophy") return { x: obstacle.x, y: ground - 45, w: 30, h: 45 };
-  return { x: obstacle.x, y: ground - 42, w: 28, h: 42 };
-}
-
-function runnerIntersects(a, b) {
-  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
-}
-
-function runnerSpawnObstacle() {
-  const { width } = runnerBounds();
-  const types = ["cone", "ball", "trophy"];
-  runnerGame.obstacles.push({
-    x: width + 28,
-    type: types[Math.floor(Math.random() * types.length)],
-  });
-}
-
-function drawRunnerPlayer(ctx, box) {
-  ctx.save();
-  ctx.translate(box.x, box.y);
-  ctx.fillStyle = "#3440f6";
-  ctx.fillRect(8, 12, 20, 24);
-  ctx.fillStyle = "#111827";
-  ctx.fillRect(7, 38, 8, 12);
-  ctx.fillRect(21, 38, 8, 12);
-  ctx.fillStyle = "#ffd7a8";
-  ctx.beginPath();
-  ctx.arc(18, 7, 8, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "#fff";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(13, 21);
-  ctx.lineTo(23, 21);
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawRunnerObstacle(ctx, obstacle) {
-  const box = runnerObstacleBox(obstacle);
-  ctx.save();
-  if (obstacle.type === "ball") {
-    ctx.fillStyle = "#fff";
-    ctx.strokeStyle = "#111827";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(box.x + 12.5, box.y + 12.5, 12, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = "#111827";
-    ctx.fillRect(box.x + 9, box.y + 8, 7, 7);
-  } else if (obstacle.type === "trophy") {
-    ctx.fillStyle = "#e0a11b";
-    ctx.fillRect(box.x + 8, box.y + 5, 14, 22);
-    ctx.fillRect(box.x + 12, box.y + 27, 6, 11);
-    ctx.fillRect(box.x + 5, box.y + 38, 20, 6);
-    ctx.strokeStyle = "#b27609";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(box.x + 6, box.y + 15, 9, Math.PI * 1.2, Math.PI * 1.8);
-    ctx.arc(box.x + 24, box.y + 15, 9, Math.PI * 1.2, Math.PI * 1.8, true);
-    ctx.stroke();
-  } else {
-    ctx.fillStyle = "#f97316";
-    ctx.beginPath();
-    ctx.moveTo(box.x + 14, box.y);
-    ctx.lineTo(box.x + 28, box.y + 42);
-    ctx.lineTo(box.x, box.y + 42);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
-    ctx.fillRect(box.x + 7, box.y + 24, 15, 4);
-  }
-  ctx.restore();
-}
-
-function runnerDraw() {
-  if (!runnerGame.canvas || !runnerGame.ctx) return;
-  const ctx = runnerGame.ctx;
-  const { width, height, ground } = runnerBounds();
-  ctx.clearRect(0, 0, width, height);
-  const gradient = ctx.createLinearGradient(0, 0, width, height);
-  gradient.addColorStop(0, "rgba(52, 64, 246, 0.08)");
-  gradient.addColorStop(0.55, "rgba(255, 255, 255, 0.94)");
-  gradient.addColorStop(1, "rgba(19, 143, 76, 0.12)");
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, width, height);
-  ctx.strokeStyle = "rgba(52, 64, 246, 0.18)";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(0, ground + 1);
-  ctx.lineTo(width, ground + 1);
-  ctx.stroke();
-  ctx.strokeStyle = "rgba(19, 143, 76, 0.22)";
-  ctx.setLineDash([14, 16]);
-  ctx.beginPath();
-  ctx.moveTo(0, ground + 23);
-  ctx.lineTo(width, ground + 23);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  runnerGame.obstacles.forEach((obstacle) => drawRunnerObstacle(ctx, obstacle));
-  drawRunnerPlayer(ctx, runnerPlayerBox());
-  if (!runnerGame.running) {
-    ctx.fillStyle = "rgba(17, 24, 39, 0.72)";
-    ctx.font = "700 18px Roboto Condensed, Arial, sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText(runnerGame.over ? "Koniec hry" : "Klikni alebo stlac medzernik", width / 2, 58);
-  }
-}
-
-function runnerUpdateStats() {
-  const scoreEl = document.querySelector("#runnerScore");
-  const bestEl = document.querySelector("#runnerBest");
-  const speedEl = document.querySelector("#runnerSpeed");
-  if (scoreEl) scoreEl.textContent = String(Math.floor(runnerGame.score));
-  if (bestEl) bestEl.textContent = String(runnerGame.best);
-  if (speedEl) speedEl.textContent = `${Math.round(runnerGame.speed)} km/h`;
-}
-
-function runnerLoop(time) {
-  if (!runnerGame.running) return;
-  if (!runnerGame.lastTime) runnerGame.lastTime = time;
-  const dt = Math.min((time - runnerGame.lastTime) / 1000, 0.033);
-  runnerGame.lastTime = time;
-  const gravity = 1700;
-  const { width } = runnerBounds();
-  runnerGame.velocity -= gravity * dt;
-  runnerGame.playerY += runnerGame.velocity * dt;
-  if (runnerGame.playerY < 0) {
-    runnerGame.playerY = 0;
-    runnerGame.velocity = 0;
-  }
-  runnerGame.score += dt * 10;
-  runnerGame.speed = Math.min(520, runnerGame.speed + dt * 5.5);
-  runnerGame.nextSpawn -= dt * 1000;
-  if (runnerGame.nextSpawn <= 0) {
-    runnerSpawnObstacle();
-    runnerGame.nextSpawn = Math.max(520, 1180 - runnerGame.speed * 1.25 + Math.random() * 280);
-  }
-  runnerGame.obstacles.forEach((obstacle) => {
-    obstacle.x -= runnerGame.speed * dt;
-  });
-  runnerGame.obstacles = runnerGame.obstacles.filter((obstacle) => obstacle.x > -60);
-  const playerBox = runnerPlayerBox();
-  if (runnerGame.obstacles.some((obstacle) => runnerIntersects(playerBox, runnerObstacleBox(obstacle)))) {
-    runnerGame.running = false;
-    runnerGame.over = true;
-    runnerGame.best = Math.max(runnerGame.best, Math.floor(runnerGame.score));
-    localStorage.setItem("MS2026_RUNNER_BEST", String(runnerGame.best));
-    runnerUpdateStats();
-    runnerDraw();
-    return;
-  }
-  runnerUpdateStats();
-  runnerDraw();
-  runnerGame.raf = requestAnimationFrame(runnerLoop);
-}
-
-function runnerJump() {
-  if (state.activeView !== "game") return;
-  if (!runnerGame.running) {
-    startRunnerGame();
-    return;
-  }
-  if (runnerGame.playerY <= 2) runnerGame.velocity = 650;
-}
-
-function startRunnerGame() {
-  stopRunnerGame(false);
-  runnerReset();
-  runnerGame.running = true;
-  runnerGame.lastTime = 0;
-  runnerUpdateStats();
-  runnerDraw();
-  runnerGame.raf = requestAnimationFrame(runnerLoop);
-}
-
-function stopRunnerGame(draw = true) {
-  if (runnerGame.raf) cancelAnimationFrame(runnerGame.raf);
-  runnerGame.raf = null;
-  runnerGame.running = false;
-  if (draw) runnerDraw();
-}
-
-function renderGame() {
-  stopRunnerGame(false);
-  els.matches.innerHTML = `
-    <section class="runner-board panel">
-      <div class="runner-head">
-        <div>
-          <h3>Penalty Run</h3>
-          <p>Preskakuj futbalove prek\u00e1\u017eky. Medzernik, sipka hore alebo kliknutie/\u0165uknutie.</p>
-        </div>
-        <div class="runner-stats" aria-label="Skore hry">
-          <div><strong id="runnerScore">0</strong><span>body</span></div>
-          <div><strong id="runnerBest">${runnerGame.best}</strong><span>rekord</span></div>
-          <div><strong id="runnerSpeed">265 km/h</strong><span>tempo</span></div>
-        </div>
-      </div>
-      <div class="runner-stage">
-        <canvas id="runnerCanvas" width="900" height="280" aria-label="Penalty Run hra"></canvas>
-      </div>
-      <div class="runner-actions">
-        <button type="button" data-runner-start>${runnerGame.over ? "Hra\u0165 znova" : "Spusti\u0165"}</button>
-        <span>Na mobile sta\u010d\u00ed \u0165ukn\u00fa\u0165 do ihriska.</span>
-      </div>
-    </section>
-  `;
-  runnerGame.canvas = document.querySelector("#runnerCanvas");
-  runnerResizeCanvas();
-  runnerDraw();
-}
 
 
 function standingsRow(row, index, rowClass, includeGroup = false) {
@@ -1849,25 +1578,6 @@ function bindEvents() {
     renderAll();
   });
 
-  els.gameViewBtn?.addEventListener("click", () => {
-    state.activeView = "game";
-    save();
-    renderAll();
-  });
-
-  window.addEventListener("keydown", (event) => {
-    if (state.activeView !== "game") return;
-    if (["Space", "ArrowUp", "KeyW"].includes(event.code)) {
-      event.preventDefault();
-      runnerJump();
-    }
-  });
-
-  window.addEventListener("resize", () => {
-    if (state.activeView !== "game") return;
-    runnerResizeCanvas();
-    runnerDraw();
-  });
 
   els.adminMode.addEventListener("change", () => {
     if (els.adminMode.checked && !canEditResults()) {
@@ -1965,12 +1675,6 @@ function bindEvents() {
   });
 
   els.matches.addEventListener("click", async (event) => {
-    const runnerStart = event.target.closest("[data-runner-start]");
-    const runnerCanvas = event.target.closest("#runnerCanvas");
-    if (runnerStart || runnerCanvas) {
-      runnerJump();
-      return;
-    }
 
     const fantasyAdd = event.target.closest("[data-fantasy-add]");
     const fantasyRemove = event.target.closest("[data-fantasy-remove]");
@@ -2040,7 +1744,6 @@ function bindEvents() {
 }
 
 function renderAll() {
-  if (state.activeView !== "game") stopRunnerGame(false);
   updateAdminAccess();
   renderLeaderboard();
   renderViewTabs();
@@ -2048,8 +1751,6 @@ function renderAll() {
     renderGroupPicks();
   } else if (state.activeView === "fantasy") {
     renderFantasy();
-  } else if (state.activeView === "game") {
-    renderGame();
   } else {
     renderMatches();
   }
