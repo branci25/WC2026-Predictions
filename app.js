@@ -525,6 +525,14 @@ const FLAG_CODES = {
 };
 
 const state = loadState();
+let miniGame = {
+  score: 0,
+  streak: 0,
+  best: Number(localStorage.getItem("MS2026_MINI_GAME_BEST") || 0),
+  round: null,
+  answered: false,
+  selectedId: null,
+};
 const els = {
   authLoggedOut: document.querySelector("#authLoggedOut"),
   authLoggedIn: document.querySelector("#authLoggedIn"),
@@ -557,6 +565,7 @@ const els = {
   groupsViewBtn: document.querySelector("#groupsViewBtn"),
   knockoutViewBtn: document.querySelector("#knockoutViewBtn"),
   fantasyViewBtn: document.querySelector("#fantasyViewBtn"),
+  gameViewBtn: document.querySelector("#gameViewBtn"),
   fantasyPositionFilter: document.querySelector("#fantasyPositionFilter"),
   fantasyTeamFilter: document.querySelector("#fantasyTeamFilter"),
   fantasyFilters: document.querySelector(".fantasy-filters"),
@@ -622,7 +631,7 @@ function normalizeState(saved) {
       fantasyPicks: normalizeFantasyPicks(merged.profiles[name].fantasyPicks),
     };
   });
-  if (!["matches", "groups", "knockout", "fantasy"].includes(merged.activeView)) merged.activeView = "matches";
+  if (!["matches", "groups", "knockout", "fantasy", "game"].includes(merged.activeView)) merged.activeView = "matches";
   if (!merged.profiles[merged.activeProfile]) merged.activeProfile = Object.keys(merged.profiles)[0] || "";
   if (!merged.sessions?.[merged.authProfile]) merged.authProfile = "";
   return merged;
@@ -995,16 +1004,19 @@ function renderViewTabs() {
   const isGroups = state.activeView === "groups";
   const isKnockout = state.activeView === "knockout";
   const isFantasy = state.activeView === "fantasy";
+  const isGame = state.activeView === "game";
   els.matchesViewBtn.classList.toggle("active", isMatches);
   els.groupsViewBtn.classList.toggle("active", isGroups);
   els.knockoutViewBtn.classList.toggle("active", isKnockout);
   els.fantasyViewBtn.classList.toggle("active", isFantasy);
+  els.gameViewBtn?.classList.toggle("active", isGame);
   els.matchesViewBtn.setAttribute("aria-selected", String(isMatches));
   els.groupsViewBtn.setAttribute("aria-selected", String(isGroups));
   els.knockoutViewBtn.setAttribute("aria-selected", String(isKnockout));
   els.fantasyViewBtn.setAttribute("aria-selected", String(isFantasy));
+  els.gameViewBtn?.setAttribute("aria-selected", String(isGame));
   document.querySelectorAll(".match-filter").forEach((el) => {
-    el.hidden = isGroups || isFantasy;
+    el.hidden = isGroups || isFantasy || isGame;
   });
   if (els.groupFilterLabel) els.groupFilterLabel.hidden = !isMatches;
   if (els.fantasyFilters) els.fantasyFilters.hidden = !isFantasy;
@@ -1192,6 +1204,129 @@ function renderFantasy() {
       </div>
     </section>
   `;
+}
+
+
+function shuffleItems(items) {
+  return [...items].sort(() => Math.random() - 0.5);
+}
+
+function gamePool() {
+  return MATCHES.filter((match) => match.home && match.away && match.date && match.time && match.venue);
+}
+
+function buildGameRound() {
+  const pool = gamePool();
+  const answer = pool[Math.floor(Math.random() * pool.length)];
+  const options = shuffleItems(pool.filter((match) => match.id !== answer.id)).slice(0, 3);
+  return {
+    answerId: answer.id,
+    options: shuffleItems([answer, ...options].map((match) => match.id)),
+  };
+}
+
+function ensureGameRound() {
+  if (!miniGame.round) miniGame.round = buildGameRound();
+}
+
+function gameMatchById(id) {
+  return MATCHES.find((match) => String(match.id) === String(id));
+}
+
+function gameMatchLabel(match) {
+  return `${match.home} - ${match.away}`;
+}
+
+function gameClue(label, value) {
+  if (!value) return "";
+  return `<span class="game-clue">${label}: ${escapeHtml(value)}</span>`;
+}
+
+function renderGame() {
+  ensureGameRound();
+  const answer = gameMatchById(miniGame.round.answerId);
+  if (!answer) {
+    miniGame.round = buildGameRound();
+    renderGame();
+    return;
+  }
+  const selectedId = miniGame.selectedId == null ? null : Number(miniGame.selectedId);
+  const answered = miniGame.answered;
+  const resultText = answered
+    ? selectedId === answer.id
+      ? "Spr\u00e1vne. Pekn\u00fd z\u00e1sah."
+      : `Tesne ved\u013ea. Spr\u00e1vne bolo: ${escapeHtml(gameMatchLabel(answer))}.`
+    : "Vyber z\u00e1pas, ktor\u00fd sed\u00ed na ind\u00edcie.";
+  const optionLabels = ["A", "B", "C", "D"];
+  els.matches.innerHTML = `
+    <section class="game-board">
+      <div class="game-summary panel">
+        <div>
+          <h3>MS detekt\u00edv</h3>
+          <p>Uh\u00e1dni z\u00e1pas pod\u013ea skupiny, \u010dasu a miesta. Za spr\u00e1vnu odpove\u010f je 1 bod.</p>
+        </div>
+        <div class="game-stats" aria-label="Sk\u00f3re hry">
+          <div class="game-stat"><strong>${miniGame.score}</strong><span>body</span></div>
+          <div class="game-stat"><strong>${miniGame.streak}</strong><span>s\u00e9ria</span></div>
+          <div class="game-stat"><strong>${miniGame.best}</strong><span>rekord</span></div>
+        </div>
+      </div>
+      <article class="game-card panel">
+        <div>
+          <h3>Ktor\u00fd z\u00e1pas to je?</h3>
+          <p>Ind\u00edcie s\u00fa z aktu\u00e1lneho rozpisu v aplik\u00e1cii.</p>
+        </div>
+        <div class="game-clues">
+          ${gameClue("Skupina", answer.group)}
+          ${gameClue("D\u00e1tum", `${formatDate(answer.date)} ${answer.time}`)}
+          ${gameClue("Mesto", answer.venue)}
+          ${gameClue("\u0160tadi\u00f3n", answer.stadium)}
+        </div>
+        <div class="game-options">
+          ${miniGame.round.options.map((id, index) => {
+            const match = gameMatchById(id);
+            const isCorrect = answered && match.id === answer.id;
+            const isWrong = answered && selectedId === match.id && match.id !== answer.id;
+            return `
+              <button class="game-option ${isCorrect ? "correct" : ""} ${isWrong ? "wrong" : ""}" type="button" data-game-choice="${match.id}" ${answered ? "disabled" : ""}>
+                <span class="game-option-index">${optionLabels[index]}</span>
+                <span>${escapeHtml(gameMatchLabel(match))}</span>
+              </button>
+            `;
+          }).join("")}
+        </div>
+        <div class="game-result">
+          <span>${resultText}</span>
+          ${answered ? `<button class="game-next" type="button" data-game-next>\u010eal\u0161ia ot\u00e1zka</button>` : ""}
+        </div>
+      </article>
+    </section>
+  `;
+}
+
+function answerGame(choiceId) {
+  ensureGameRound();
+  if (miniGame.answered) return;
+  const answerId = Number(miniGame.round.answerId);
+  const selectedId = Number(choiceId);
+  miniGame.selectedId = selectedId;
+  miniGame.answered = true;
+  if (selectedId === answerId) {
+    miniGame.score += 1;
+    miniGame.streak += 1;
+    miniGame.best = Math.max(miniGame.best, miniGame.score);
+    localStorage.setItem("MS2026_MINI_GAME_BEST", String(miniGame.best));
+  } else {
+    miniGame.streak = 0;
+  }
+  renderGame();
+}
+
+function nextGameRound() {
+  miniGame.round = buildGameRound();
+  miniGame.answered = false;
+  miniGame.selectedId = null;
+  renderGame();
 }
 
 
@@ -1577,6 +1712,12 @@ function bindEvents() {
     renderAll();
   });
 
+  els.gameViewBtn?.addEventListener("click", () => {
+    state.activeView = "game";
+    save();
+    renderAll();
+  });
+
   els.adminMode.addEventListener("change", () => {
     if (els.adminMode.checked && !canEditResults()) {
       els.adminMode.checked = false;
@@ -1673,6 +1814,14 @@ function bindEvents() {
   });
 
   els.matches.addEventListener("click", async (event) => {
+    const gameChoice = event.target.closest("[data-game-choice]");
+    const gameNext = event.target.closest("[data-game-next]");
+    if (gameChoice || gameNext) {
+      if (gameChoice) answerGame(gameChoice.dataset.gameChoice);
+      if (gameNext) nextGameRound();
+      return;
+    }
+
     const fantasyAdd = event.target.closest("[data-fantasy-add]");
     const fantasyRemove = event.target.closest("[data-fantasy-remove]");
     if (fantasyAdd || fantasyRemove) {
@@ -1748,6 +1897,8 @@ function renderAll() {
     renderGroupPicks();
   } else if (state.activeView === "fantasy") {
     renderFantasy();
+  } else if (state.activeView === "game") {
+    renderGame();
   } else {
     renderMatches();
   }
