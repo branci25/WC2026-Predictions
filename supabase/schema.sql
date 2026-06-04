@@ -68,6 +68,11 @@ create table if not exists public.group_order_tips (
   primary key (player_id, group_code)
 );
 
+create table if not exists public.fantasy_picks (
+  player_id uuid primary key references public.players(id) on delete cascade,
+  player_ids text[] not null default '{}',
+  updated_at timestamptz not null default now()
+);
 
 alter table public.players enable row level security;
 alter table public.player_sessions enable row level security;
@@ -75,6 +80,7 @@ alter table public.matches enable row level security;
 alter table public.chat_messages enable row level security;
 alter table public.match_tips enable row level security;
 alter table public.group_order_tips enable row level security;
+alter table public.fantasy_picks enable row level security;
 
 -- Recreate policies safely when this file is run more than once.
 drop policy if exists "matches are readable by everyone" on public.matches;
@@ -82,6 +88,7 @@ drop policy if exists "players names are readable by everyone" on public.players
 drop policy if exists "match tips are readable by everyone" on public.match_tips;
 drop policy if exists "group order tips are readable by everyone" on public.group_order_tips;
 drop policy if exists "chat messages are readable by everyone" on public.chat_messages;
+drop policy if exists "fantasy picks are readable by everyone" on public.fantasy_picks;
 -- Public read access for shared game data and leaderboard views.
 create policy "matches are readable by everyone"
 on public.matches for select
@@ -108,6 +115,10 @@ on public.chat_messages for select
 to anon, authenticated
 using (true);
 
+create policy "fantasy picks are readable by everyone"
+on public.fantasy_picks for select
+to anon, authenticated
+using (true);
 
 create or replace function public.touch_session(p_token uuid)
 returns uuid
@@ -315,6 +326,40 @@ begin
 end;
 $$;
 
+create or replace function public.set_fantasy_picks(
+  p_session_token uuid,
+  p_player_ids text[]
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_player_id uuid;
+  v_unique_count integer;
+begin
+  v_player_id := public.touch_session(p_session_token);
+
+  select count(distinct item) into v_unique_count
+  from unnest(coalesce(p_player_ids, '{}')) as item;
+
+  if coalesce(array_length(p_player_ids, 1), 0) > 15 then
+    raise exception 'Too many fantasy players';
+  end if;
+
+  if v_unique_count <> coalesce(array_length(p_player_ids, 1), 0) then
+    raise exception 'Duplicate fantasy players';
+  end if;
+
+  insert into public.fantasy_picks (player_id, player_ids, updated_at)
+  values (v_player_id, coalesce(p_player_ids, '{}'), now())
+  on conflict (player_id)
+  do update set
+    player_ids = excluded.player_ids,
+    updated_at = now();
+end;
+$$;
 
 create or replace function public.set_match_result(
   p_session_token uuid,
@@ -391,5 +436,6 @@ grant execute on function public.delete_player(uuid) to anon, authenticated;
 grant execute on function public.set_match_tip(uuid, integer, integer, integer) to anon, authenticated;
 grant execute on function public.set_match_joker(uuid, integer, boolean) to anon, authenticated;
 grant execute on function public.set_group_order_tip(uuid, text, text[]) to anon, authenticated;
+grant execute on function public.set_fantasy_picks(uuid, text[]) to anon, authenticated;
 grant execute on function public.set_match_result(uuid, integer, integer, integer) to anon, authenticated;
 grant execute on function public.send_chat_message(uuid, text) to anon, authenticated;
