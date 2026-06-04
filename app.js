@@ -622,7 +622,7 @@ function normalizeState(saved) {
       fantasyPicks: normalizeFantasyPicks(merged.profiles[name].fantasyPicks),
     };
   });
-  if (!["matches", "groups", "knockout", "fantasy"].includes(merged.activeView)) merged.activeView = "matches";
+  if (!["matches", "groups", "knockout"].includes(merged.activeView)) merged.activeView = "matches";
   if (!merged.profiles[merged.activeProfile]) merged.activeProfile = Object.keys(merged.profiles)[0] || "";
   if (!merged.sessions?.[merged.authProfile]) merged.authProfile = "";
   return merged;
@@ -998,11 +998,11 @@ function renderViewTabs() {
   els.matchesViewBtn.classList.toggle("active", isMatches);
   els.groupsViewBtn.classList.toggle("active", isGroups);
   els.knockoutViewBtn.classList.toggle("active", isKnockout);
-  els.fantasyViewBtn.classList.toggle("active", isFantasy);
+  els.fantasyViewBtn?.classList.toggle("active", isFantasy);
   els.matchesViewBtn.setAttribute("aria-selected", String(isMatches));
   els.groupsViewBtn.setAttribute("aria-selected", String(isGroups));
   els.knockoutViewBtn.setAttribute("aria-selected", String(isKnockout));
-  els.fantasyViewBtn.setAttribute("aria-selected", String(isFantasy));
+  els.fantasyViewBtn?.setAttribute("aria-selected", String(isFantasy));
   document.querySelectorAll(".match-filter").forEach((el) => {
     el.hidden = isGroups || isFantasy;
   });
@@ -1572,7 +1572,7 @@ function bindEvents() {
     renderAll();
   });
 
-  els.fantasyViewBtn.addEventListener("click", () => {
+  els.fantasyViewBtn?.addEventListener("click", () => {
     state.activeView = "fantasy";
     save();
     renderAll();
