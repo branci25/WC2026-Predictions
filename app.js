@@ -38,441 +38,6 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const SESSION_KEY = "ms2026-supabase-sessions-v1";
 const TIP_LOCK_MINUTES = 10;
 const MAX_JOKERS = 2;
-const FANTASY_BUDGET = 100;
-const FANTASY_SQUAD_SIZE = 15;
-const FANTASY_TEAM_LIMIT = 3;
-const FANTASY_LIMITS = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
-const FANTASY_FORMATION = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
-const FANTASY_POSITION_LABELS = { GK: "BR", DEF: "OB", MID: "ZA", FWD: "UT" };
-const FANTASY_POSITION_NAMES = { GK: "Brank\u00e1r", DEF: "Obranca", MID: "Z\u00e1lo\u017en\u00edk", FWD: "\u00dato\u010dn\u00edk" };
-const FANTASY_PLAYERS = [
-  {
-    "id": "gk-alisson",
-    "name": "Alisson Becker",
-    "position": "GK",
-    "team": "Braz\u00edlia",
-    "price": 6.0
-  },
-  {
-    "id": "gk-ederson",
-    "name": "Ederson",
-    "position": "GK",
-    "team": "Braz\u00edlia",
-    "price": 6.0
-  },
-  {
-    "id": "gk-raya",
-    "name": "David Raya",
-    "position": "GK",
-    "team": "\u0160panielsko",
-    "price": 5.8
-  },
-  {
-    "id": "gk-simon",
-    "name": "Unai Simon",
-    "position": "GK",
-    "team": "\u0160panielsko",
-    "price": 5.8
-  },
-  {
-    "id": "gk-pickford",
-    "name": "Jordan Pickford",
-    "position": "GK",
-    "team": "Anglicko",
-    "price": 5.5
-  },
-  {
-    "id": "gk-kobel",
-    "name": "Gregor Kobel",
-    "position": "GK",
-    "team": "\u0160vaj\u010diarsko",
-    "price": 5.5
-  },
-  {
-    "id": "gk-martinez",
-    "name": "Emiliano Martinez",
-    "position": "GK",
-    "team": "Argent\u00edna",
-    "price": 5.4
-  },
-  {
-    "id": "gk-neuer",
-    "name": "Manuel Neuer",
-    "position": "GK",
-    "team": "Nemecko",
-    "price": 5.3
-  },
-  {
-    "id": "def-hakimi",
-    "name": "Achraf Hakimi",
-    "position": "DEF",
-    "team": "Maroko",
-    "price": 6.0
-  },
-  {
-    "id": "def-vandijk",
-    "name": "Virgil van Dijk",
-    "position": "DEF",
-    "team": "Holandsko",
-    "price": 6.0
-  },
-  {
-    "id": "def-gabriel",
-    "name": "Gabriel",
-    "position": "DEF",
-    "team": "Braz\u00edlia",
-    "price": 5.8
-  },
-  {
-    "id": "def-saliba",
-    "name": "William Saliba",
-    "position": "DEF",
-    "team": "Franc\u00fazsko",
-    "price": 5.7
-  },
-  {
-    "id": "def-kimmich",
-    "name": "Joshua Kimmich",
-    "position": "DEF",
-    "team": "Nemecko",
-    "price": 5.7
-  },
-  {
-    "id": "def-gvardiol",
-    "name": "Jo\u0161ko Gvardiol",
-    "position": "DEF",
-    "team": "Chorv\u00e1tsko",
-    "price": 5.6
-  },
-  {
-    "id": "def-carvajal",
-    "name": "Dani Carvajal",
-    "position": "DEF",
-    "team": "\u0160panielsko",
-    "price": 5.5
-  },
-  {
-    "id": "def-cucurella",
-    "name": "Marc Cucurella",
-    "position": "DEF",
-    "team": "\u0160panielsko",
-    "price": 5.4
-  },
-  {
-    "id": "def-mendes",
-    "name": "Nuno Mendes",
-    "position": "DEF",
-    "team": "Portugalsko",
-    "price": 5.4
-  },
-  {
-    "id": "def-araujo",
-    "name": "Ronald Araujo",
-    "position": "DEF",
-    "team": "Uruguaj",
-    "price": 5.3
-  },
-  {
-    "id": "def-davies",
-    "name": "Alphonso Davies",
-    "position": "DEF",
-    "team": "Kanada",
-    "price": 5.2
-  },
-  {
-    "id": "def-robertson",
-    "name": "Andy Robertson",
-    "position": "DEF",
-    "team": "\u0160k\u00f3tsko",
-    "price": 5.1
-  },
-  {
-    "id": "mid-vinicius",
-    "name": "Vin\u00edcius J\u00fanior",
-    "position": "MID",
-    "team": "Braz\u00edlia",
-    "price": 10.0
-  },
-  {
-    "id": "mid-dembele",
-    "name": "Demb\u00e9l\u00e9",
-    "position": "MID",
-    "team": "Franc\u00fazsko",
-    "price": 10.0
-  },
-  {
-    "id": "mid-yamal",
-    "name": "Lamine Yamal",
-    "position": "MID",
-    "team": "\u0160panielsko",
-    "price": 10.0
-  },
-  {
-    "id": "mid-salah",
-    "name": "Mohamed Salah",
-    "position": "MID",
-    "team": "Egypt",
-    "price": 10.0
-  },
-  {
-    "id": "mid-saka",
-    "name": "Saka",
-    "position": "MID",
-    "team": "Anglicko",
-    "price": 9.5
-  },
-  {
-    "id": "mid-olise",
-    "name": "Olise",
-    "position": "MID",
-    "team": "Franc\u00fazsko",
-    "price": 9.5
-  },
-  {
-    "id": "mid-bruno",
-    "name": "Bruno Fernandes",
-    "position": "MID",
-    "team": "Portugalsko",
-    "price": 8.5
-  },
-  {
-    "id": "mid-bellingham",
-    "name": "Bellingham",
-    "position": "MID",
-    "team": "Anglicko",
-    "price": 8.3
-  },
-  {
-    "id": "mid-raphinha",
-    "name": "Raphinha",
-    "position": "MID",
-    "team": "Braz\u00edlia",
-    "price": 8.2
-  },
-  {
-    "id": "mid-diaz",
-    "name": "D\u00edaz",
-    "position": "MID",
-    "team": "Kolumbia",
-    "price": 8.1
-  },
-  {
-    "id": "mid-pedri",
-    "name": "Pedri",
-    "position": "MID",
-    "team": "\u0160panielsko",
-    "price": 8.1
-  },
-  {
-    "id": "mid-cherki",
-    "name": "Cherki",
-    "position": "MID",
-    "team": "Franc\u00fazsko",
-    "price": 8.0
-  },
-  {
-    "id": "mid-barcola",
-    "name": "Barcola",
-    "position": "MID",
-    "team": "Franc\u00fazsko",
-    "price": 8.0
-  },
-  {
-    "id": "mid-musiala",
-    "name": "Musiala",
-    "position": "MID",
-    "team": "Nemecko",
-    "price": 8.0
-  },
-  {
-    "id": "mid-wirtz",
-    "name": "Wirtz",
-    "position": "MID",
-    "team": "Nemecko",
-    "price": 7.8
-  },
-  {
-    "id": "mid-kubo",
-    "name": "Takefusa Kubo",
-    "position": "MID",
-    "team": "Japonsko",
-    "price": 7.8
-  },
-  {
-    "id": "fwd-kane",
-    "name": "Kane",
-    "position": "FWD",
-    "team": "Anglicko",
-    "price": 10.5
-  },
-  {
-    "id": "fwd-mbappe",
-    "name": "Mbapp\u00e9",
-    "position": "FWD",
-    "team": "Franc\u00fazsko",
-    "price": 10.5
-  },
-  {
-    "id": "fwd-haaland",
-    "name": "Haaland",
-    "position": "FWD",
-    "team": "N\u00f3rsko",
-    "price": 10.5
-  },
-  {
-    "id": "fwd-messi",
-    "name": "Messi",
-    "position": "FWD",
-    "team": "Argent\u00edna",
-    "price": 10.0
-  },
-  {
-    "id": "fwd-ronaldo",
-    "name": "Cristiano Ronaldo",
-    "position": "FWD",
-    "team": "Portugalsko",
-    "price": 10.0
-  },
-  {
-    "id": "fwd-lautaro",
-    "name": "Lautaro Mart\u00ednez",
-    "position": "FWD",
-    "team": "Argent\u00edna",
-    "price": 8.8
-  },
-  {
-    "id": "fwd-alvarez",
-    "name": "Alvarez",
-    "position": "FWD",
-    "team": "Argent\u00edna",
-    "price": 8.6
-  },
-  {
-    "id": "fwd-oyarzabal",
-    "name": "Oyarzabal",
-    "position": "FWD",
-    "team": "\u0160panielsko",
-    "price": 8.1
-  },
-  {
-    "id": "fwd-gakpo",
-    "name": "Gakpo",
-    "position": "FWD",
-    "team": "Holandsko",
-    "price": 7.8
-  },
-  {
-    "id": "fwd-david",
-    "name": "Jonathan David",
-    "position": "FWD",
-    "team": "Kanada",
-    "price": 7.8
-  }
-];
-const supabaseEnabled = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
-let onlineBusy = false;
-let authMode = "login";
-
-function loadSessions() {
-  try {
-    return JSON.parse(localStorage.getItem(SESSION_KEY)) || {};
-  } catch {
-    localStorage.removeItem(SESSION_KEY);
-    return {};
-  }
-}
-
-function saveSessions() {
-  localStorage.setItem(SESSION_KEY, JSON.stringify(state.sessions || {}));
-}
-
-function clearAuthError() {
-  if (els.authModalError) els.authModalError.textContent = "";
-}
-
-function setAuthError(message) {
-  if (els.authModalError) els.authModalError.textContent = message || "Niečo sa nepodarilo.";
-}
-
-function friendlyAuthError(error, mode = authMode) {
-  const message = String(error?.message || error || "").toLowerCase();
-  if (message.includes("invalid name or pin")) return "Nespr\u00e1vny PIN alebo profil.";
-  if (message.includes("player already exists") || message.includes("duplicate key") || message.includes("unique constraint") || message.includes("players_display_name_key") || message.includes("already exists")) return "\u00da\u010det s t\u00fdmto menom u\u017e existuje.";
-  if (message.includes("name is too short")) return "Meno mus\u00ed ma\u0165 aspo\u0148 2 znaky.";
-  if (message.includes("pin must be")) return "PIN mus\u00ed ma\u0165 4 a\u017e 8 \u010d\u00edslic.";
-  if (message.includes("display_name") && message.includes("ambiguous")) return mode === "login" ? "Prihl\u00e1senie je potrebn\u00e9 opravi\u0165 v datab\u00e1ze. Spusti aktualizovan\u00fd schema.sql." : "\u00da\u010det sa nepodarilo vytvori\u0165.";
-  return mode === "create" ? "\u00da\u010det sa nepodarilo vytvori\u0165." : "Prihl\u00e1senie sa nepodarilo.";
-}
-
-function friendlyJokerError(error) {
-  const message = String(error?.message || error || "").toLowerCase();
-  if (message.includes("too many jokers")) return `M\u00f4\u017ee\u0161 pou\u017ei\u0165 najviac ${MAX_JOKERS} \u017eol\u00edky.`;
-  if (message.includes("match joker is locked")) return "\u017dol\u00edk pre tento z\u00e1pas je u\u017e uzavret\u00fd.";
-  if (message.includes("set_match_joker") || message.includes("function") || message.includes("schema cache")) return "\u017dol\u00edk e\u0161te nie je zapnut\u00fd v datab\u00e1ze. Spusti aktualizovan\u00fd schema.sql.";
-  return "\u017dol\u00edk sa nepodarilo ulo\u017ei\u0165.";
-}
-
-function escapeHtml(value) {
-  return String(value).replace(/[&<>\"]/g, (char) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    "\"": "&quot;",
-  }[char]));
-}
-async function supabaseRequest(path, options = {}) {
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    ...options,
-    headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      "Content-Type": "application/json",
-      Prefer: "return=representation",
-      ...(options.headers || {}),
-    },
-  });
-  const text = await response.text();
-  const payload = text ? JSON.parse(text) : null;
-  if (!response.ok) throw new Error(payload?.message || payload?.hint || "Supabase request failed");
-  return payload;
-}
-
-function supabaseRpc(name, body) {
-  return supabaseRequest(`rpc/${name}`, {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
-}
-
-function setOnlineBusy(value) {
-  onlineBusy = value;
-  document.body.classList.toggle("online-busy", value);
-  if (els?.openLoginBtn) els.openLoginBtn.disabled = value || Object.keys(state.profiles).length === 0;
-  if (els?.openCreateAccountBtn) els.openCreateAccountBtn.disabled = value;
-  if (els?.logoutBtn) els.logoutBtn.disabled = value;
-  if (els?.deleteAccountBtn) els.deleteAccountBtn.disabled = value || !activeSession();
-  if (typeof renderChat === "function") renderChat();
-  if (typeof updateAdminAccess === "function") updateAdminAccess();
-}
-
-function activeSession() {
-  return state.authProfile ? state.sessions?.[state.authProfile] || null : null;
-}
-
-function canEditActiveProfile() {
-  return !supabaseEnabled || Boolean(activeSession() && state.activeProfile === state.authProfile);
-}
-
-function canEditResults() {
-  return !supabaseEnabled || Boolean(activeSession());
-}
-
-function requireActiveSession() {
-  const session = activeSession();
-  if (session) return session;
-  alert("Najprv sa prihlás PINom k tomuto profilu.");
-  return null;
-}
 const FLAG_CODES = {
   "Alžírsko": "dz",
   "Anglicko": "gb-eng",
@@ -556,10 +121,6 @@ const els = {
   matchesViewBtn: document.querySelector("#matchesViewBtn"),
   groupsViewBtn: document.querySelector("#groupsViewBtn"),
   knockoutViewBtn: document.querySelector("#knockoutViewBtn"),
-  fantasyViewBtn: document.querySelector("#fantasyViewBtn"),
-  fantasyPositionFilter: document.querySelector("#fantasyPositionFilter"),
-  fantasyTeamFilter: document.querySelector("#fantasyTeamFilter"),
-  fantasyFilters: document.querySelector(".fantasy-filters"),
   groupFilterLabel: document.querySelector(".group-filter-label"),
   matches: document.querySelector("#matches"),
   leaderboard: document.querySelector("#leaderboard"),
@@ -594,10 +155,10 @@ function defaultState() {
     activeProfile: "Brano",
     authProfile: "",
     profiles: {
-      Brano: { tips: Object.fromEntries(BRANO_TIPS.map((tip) => [tip.matchId, { home: tip.home, away: tip.away }])), groupPicks: defaultGroupPicks(), fantasyPicks: [] },
-      Samo: { tips: {}, groupPicks: defaultGroupPicks(), fantasyPicks: [] },
-      Tobo: { tips: {}, groupPicks: defaultGroupPicks(), fantasyPicks: [] },
-      Erik: { tips: {}, groupPicks: defaultGroupPicks(), fantasyPicks: [] },
+      Brano: { tips: Object.fromEntries(BRANO_TIPS.map((tip) => [tip.matchId, { home: tip.home, away: tip.away }])), groupPicks: defaultGroupPicks() },
+      Samo: { tips: {}, groupPicks: defaultGroupPicks() },
+      Tobo: { tips: {}, groupPicks: defaultGroupPicks() },
+      Erik: { tips: {}, groupPicks: defaultGroupPicks() },
     },
     results,
     sessions: loadSessions(),
@@ -619,10 +180,9 @@ function normalizeState(saved) {
     merged.profiles[name] = {
       tips: normalizedTips,
       groupPicks: normalizeGroupPicks(merged.profiles[name].groupPicks),
-      fantasyPicks: normalizeFantasyPicks(merged.profiles[name].fantasyPicks),
     };
   });
-  if (!["matches", "groups", "knockout", "fantasy"].includes(merged.activeView)) merged.activeView = "matches";
+  if (!["matches", "groups", "knockout"].includes(merged.activeView)) merged.activeView = "matches";
   if (!merged.profiles[merged.activeProfile]) merged.activeProfile = Object.keys(merged.profiles)[0] || "";
   if (!merged.sessions?.[merged.authProfile]) merged.authProfile = "";
   return merged;
@@ -648,43 +208,6 @@ function isFinished(match) {
   const result = state.results[match.id];
   return result?.home !== null && result?.away !== null;
 }
-
-function normalizeFantasyPicks(picks = []) {
-  const validIds = new Set(FANTASY_PLAYERS.map((player) => player.id));
-  return [...new Set(Array.isArray(picks) ? picks : [])].filter((id) => validIds.has(id)).slice(0, FANTASY_SQUAD_SIZE);
-}
-
-function fantasyPlayerById(id) {
-  return FANTASY_PLAYERS.find((player) => player.id === id);
-}
-
-function formatFantasyPrice(value) {
-  return `${Number(value).toFixed(1).replace(".0", "")} mil. \u20ac`;
-}
-
-function fantasyStats(profileName = state.activeProfile) {
-  const picks = normalizeFantasyPicks(state.profiles[profileName]?.fantasyPicks || []);
-  const players = picks.map(fantasyPlayerById).filter(Boolean);
-  const spent = players.reduce((sum, player) => sum + player.price, 0);
-  const counts = Object.fromEntries(Object.keys(FANTASY_LIMITS).map((position) => [position, players.filter((player) => player.position === position).length]));
-  const teamCounts = players.reduce((acc, player) => {
-    acc[player.team] = (acc[player.team] || 0) + 1;
-    return acc;
-  }, {});
-  return { picks, players, spent, remaining: FANTASY_BUDGET - spent, counts, teamCounts };
-}
-
-function canAddFantasyPlayer(player, profileName = state.activeProfile) {
-  const stats = fantasyStats(profileName);
-  if (!player) return { ok: false, reason: "Hr\u00e1\u010d neexistuje." };
-  if (stats.picks.includes(player.id)) return { ok: false, reason: "Hr\u00e1\u010d u\u017e je vo v\u00fdbere." };
-  if (stats.picks.length >= FANTASY_SQUAD_SIZE) return { ok: false, reason: `Fantasy t\u00edm m\u00f4\u017ee ma\u0165 najviac ${FANTASY_SQUAD_SIZE} hr\u00e1\u010dov.` };
-  if ((stats.counts[player.position] || 0) >= FANTASY_LIMITS[player.position]) return { ok: false, reason: `Limit pre poz\u00edciu ${FANTASY_POSITION_LABELS[player.position]} je u\u017e pln\u00fd.` };
-  if ((stats.teamCounts[player.team] || 0) >= FANTASY_TEAM_LIMIT) return { ok: false, reason: `Z jedn\u00e9ho t\u00edmu m\u00f4\u017ee\u0161 ma\u0165 najviac ${FANTASY_TEAM_LIMIT} hr\u00e1\u010dov.` };
-  if (stats.spent + player.price > FANTASY_BUDGET) return { ok: false, reason: "Nem\u00e1\u0161 dos\u0165 fantasy rozpo\u010dtu." };
-  return { ok: true };
-}
-
 
 function isJoker(profileName, matchId) {
   return Boolean(state.profiles[profileName]?.tips?.[matchId]?.joker);
@@ -936,17 +459,6 @@ function renderControls() {
 
   const groupOptions = getGroups().map((group) => `<option value="${group}">Skupina ${group}</option>`);
   if (els.groupFilter) els.groupFilter.innerHTML = `<option value="all">Všetky skupiny</option>${groupOptions.join("")}`;
-  if (els.fantasyPositionFilter) {
-    const currentPosition = els.fantasyPositionFilter.value || "all";
-    els.fantasyPositionFilter.innerHTML = `<option value="all">Všetky pozície</option>${Object.entries(FANTASY_POSITION_NAMES).map(([code, label]) => `<option value="${code}">${label}</option>`).join("")}`;
-    els.fantasyPositionFilter.value = currentPosition;
-  }
-  if (els.fantasyTeamFilter) {
-    const currentTeam = els.fantasyTeamFilter.value || "all";
-    const teams = [...new Set(FANTASY_PLAYERS.map((player) => player.team))].sort((a, b) => a.localeCompare(b, "sk"));
-    els.fantasyTeamFilter.innerHTML = `<option value="all">Všetky tímy</option>${teams.map((team) => `<option value="${escapeHtml(team)}">${escapeHtml(team)}</option>`).join("")}`;
-    els.fantasyTeamFilter.value = teams.includes(currentTeam) ? currentTeam : "all";
-  }
 }
 
 
@@ -994,20 +506,16 @@ function renderViewTabs() {
   const isMatches = state.activeView === "matches";
   const isGroups = state.activeView === "groups";
   const isKnockout = state.activeView === "knockout";
-  const isFantasy = state.activeView === "fantasy";
   els.matchesViewBtn.classList.toggle("active", isMatches);
   els.groupsViewBtn.classList.toggle("active", isGroups);
   els.knockoutViewBtn.classList.toggle("active", isKnockout);
-  els.fantasyViewBtn.classList.toggle("active", isFantasy);
   els.matchesViewBtn.setAttribute("aria-selected", String(isMatches));
   els.groupsViewBtn.setAttribute("aria-selected", String(isGroups));
   els.knockoutViewBtn.setAttribute("aria-selected", String(isKnockout));
-  els.fantasyViewBtn.setAttribute("aria-selected", String(isFantasy));
   document.querySelectorAll(".match-filter").forEach((el) => {
-    el.hidden = isGroups || isFantasy;
+    el.hidden = isGroups;
   });
   if (els.groupFilterLabel) els.groupFilterLabel.hidden = !isMatches;
-  if (els.fantasyFilters) els.fantasyFilters.hidden = !isFantasy;
 }
 
 function renderMatches() {
@@ -1121,81 +629,6 @@ function scoreGroupTeam(score, team, pickedIndex) {
   return "0";
 }
 
-function renderFantasy() {
-  if (!state.activeProfile || !state.profiles[state.activeProfile]) {
-    els.matches.innerHTML = `<div class="empty-state">Vytvor alebo prihl\u00e1s hr\u00e1\u010da, aby si mohol sklada\u0165 fantasy t\u00edm.</div>`;
-    return;
-  }
-  const position = els.fantasyPositionFilter?.value || "all";
-  const team = els.fantasyTeamFilter?.value || "all";
-  const canEdit = canEditActiveProfile();
-  const stats = fantasyStats();
-  const selected = new Set(stats.picks);
-  const selectedByPosition = Object.fromEntries(Object.keys(FANTASY_LIMITS).map((key) => [key, stats.players.filter((player) => player.position === key)]));
-  const available = FANTASY_PLAYERS.filter((player) =>
-    (position === "all" || player.position === position) &&
-    (team === "all" || player.team === team)
-  ).sort((a, b) => b.price - a.price || a.position.localeCompare(b.position) || a.name.localeCompare(b.name, "sk"));
-  const positionSummary = Object.keys(FANTASY_LIMITS).map((key) => `${FANTASY_POSITION_LABELS[key]} ${stats.counts[key] || 0}/${FANTASY_LIMITS[key]}`).join(" \u00b7 ");
-  const renderSlot = (positionKey, index) => {
-    const player = selectedByPosition[positionKey][index];
-    if (!player) {
-      return `<div class="fantasy-slot empty"><span>${FANTASY_POSITION_LABELS[positionKey]}</span><small>vo\u013en\u00e9 miesto</small></div>`;
-    }
-    return `
-      <button class="fantasy-slot filled" type="button" data-fantasy-remove="${player.id}" ${canEdit ? "" : "disabled"} title="Odobra\u0165 ${escapeHtml(player.name)}">
-        ${flagImg(player.team)}
-        <strong>${escapeHtml(player.name)}</strong>
-        <span>${escapeHtml(player.team)}</span>
-        <small>${formatFantasyPrice(player.price)}</small>
-      </button>
-    `;
-  };
-
-  els.matches.innerHTML = `
-    <section class="fantasy-board fantasy-board-pitch">
-      <div class="fantasy-summary panel">
-        <div>
-          <h3>Fantasy t\u00edm</h3>
-          <p>${stats.picks.length}/${FANTASY_SQUAD_SIZE} hr\u00e1\u010dov \u00b7 ${positionSummary}</p>
-          <small>Rozpo\u010det 100 mil. \u20ac, max. ${FANTASY_TEAM_LIMIT} hr\u00e1\u010di z jednej krajiny.</small>
-        </div>
-        <div class="fantasy-budget">
-          <span>${formatFantasyPrice(stats.remaining)}</span>
-          <small>zost\u00e1va</small>
-        </div>
-      </div>
-      <div class="fantasy-layout">
-        <div class="fantasy-pitch" aria-label="Tvoj fantasy t\u00edm">
-          <div class="pitch-line pitch-line-gk">${Array.from({ length: FANTASY_FORMATION.GK }, (_, index) => renderSlot("GK", index)).join("")}</div>
-          <div class="pitch-line pitch-line-def">${Array.from({ length: FANTASY_FORMATION.DEF }, (_, index) => renderSlot("DEF", index)).join("")}</div>
-          <div class="pitch-line pitch-line-mid">${Array.from({ length: FANTASY_FORMATION.MID }, (_, index) => renderSlot("MID", index)).join("")}</div>
-          <div class="pitch-line pitch-line-fwd">${Array.from({ length: FANTASY_FORMATION.FWD }, (_, index) => renderSlot("FWD", index)).join("")}</div>
-        </div>
-        <aside class="fantasy-pool-panel">
-          <div class="fantasy-section-title">Pool hr\u00e1\u010dov</div>
-          <div class="fantasy-pool">
-            ${available.map((player) => {
-              const check = canAddFantasyPlayer(player);
-              const picked = selected.has(player.id);
-              return `
-                <article class="fantasy-card ${picked ? "picked" : ""}">
-                  ${flagImg(player.team)}
-                  <div><strong>${escapeHtml(player.name)}</strong><span>${FANTASY_POSITION_NAMES[player.position]} \u00b7 ${escapeHtml(player.team)}</span></div>
-                  <b>${formatFantasyPrice(player.price)}</b>
-                  <button type="button" data-fantasy-add="${player.id}" ${canEdit && !picked && check.ok ? "" : "disabled"} title="${picked ? "U\u017e je vo v\u00fdbere" : escapeHtml(check.reason || "Prida\u0165 hr\u00e1\u010da")}">${picked ? "Vybran\u00fd" : "Prida\u0165"}</button>
-                </article>
-              `;
-            }).join("")}
-          </div>
-        </aside>
-      </div>
-    </section>
-  `;
-}
-
-
-
 function standingsRow(row, index, rowClass, includeGroup = false) {
   return `
     <tr class="${rowClass}">
@@ -1266,21 +699,19 @@ async function loadOnlineState() {
   try {
     const matchTipsRequest = supabaseRequest("match_tips?select=player_id,match_id,home_score,away_score,is_joker")
       .catch(() => supabaseRequest("match_tips?select=player_id,match_id,home_score,away_score"));
-    const fantasyPicksRequest = supabaseRequest("fantasy_picks?select=player_id,player_ids").catch(() => []);
-    const [players, remoteMatches, matchTips, groupTips, chatMessages, fantasyPicks] = await Promise.all([
+    const [players, remoteMatches, matchTips, groupTips, chatMessages] = await Promise.all([
       supabaseRequest("players?select=id,display_name,is_admin&order=created_at.asc"),
       supabaseRequest("matches?select=id,match_date,match_time,city,stadium,home_score,away_score&order=id.asc"),
       matchTipsRequest,
       supabaseRequest("group_order_tips?select=player_id,group_code,team_order"),
       supabaseRequest("chat_messages?select=id,player_id,body,created_at&order=created_at.asc&limit=80").catch(() => []),
-      fantasyPicksRequest,
     ]);
 
     const nextProfiles = {};
     const namesById = new Map();
     players.forEach((player) => {
       namesById.set(player.id, player.display_name);
-      nextProfiles[player.display_name] = { tips: {}, groupPicks: defaultGroupPicks(), fantasyPicks: [] };
+      nextProfiles[player.display_name] = { tips: {}, groupPicks: defaultGroupPicks() };
       if (state.sessions?.[player.display_name]) {
         state.sessions[player.display_name].playerId = player.id;
         state.sessions[player.display_name].isAdmin = player.is_admin;
@@ -1307,11 +738,6 @@ async function loadOnlineState() {
       nextProfiles[name].groupPicks = normalizeGroupPicks(nextProfiles[name].groupPicks);
     });
 
-    fantasyPicks.forEach((pick) => {
-      const name = namesById.get(pick.player_id);
-      if (!name || !nextProfiles[name]) return;
-      nextProfiles[name].fantasyPicks = normalizeFantasyPicks(pick.player_ids);
-    });
 
     state.profiles = nextProfiles;
     if (!state.profiles[state.authProfile] || !state.sessions[state.authProfile]) state.authProfile = "";
@@ -1391,16 +817,6 @@ async function saveOnlineJoker(matchId) {
     p_session_token: session.token,
     p_match_id: Number(matchId),
     p_is_joker: Boolean(tip.joker),
-  });
-  await loadOnlineState();
-}
-
-async function saveOnlineFantasy() {
-  const session = requireActiveSession();
-  if (!session) return;
-  await supabaseRpc("set_fantasy_picks", {
-    p_session_token: session.token,
-    p_player_ids: normalizeFantasyPicks(state.profiles[state.activeProfile].fantasyPicks),
   });
   await loadOnlineState();
 }
@@ -1550,9 +966,6 @@ function bindEvents() {
   [els.groupFilter, els.statusFilter, els.searchInput].forEach((el) => {
     el.addEventListener("input", renderMatches);
   });
-  [els.fantasyPositionFilter, els.fantasyTeamFilter].forEach((el) => {
-    el?.addEventListener("input", renderFantasy);
-  });
 
   els.matchesViewBtn.addEventListener("click", () => {
     state.activeView = "matches";
@@ -1572,11 +985,6 @@ function bindEvents() {
     renderAll();
   });
 
-  els.fantasyViewBtn.addEventListener("click", () => {
-    state.activeView = "fantasy";
-    save();
-    renderAll();
-  });
 
 
   els.adminMode.addEventListener("change", () => {
@@ -1676,35 +1084,6 @@ function bindEvents() {
 
   els.matches.addEventListener("click", async (event) => {
 
-    const fantasyAdd = event.target.closest("[data-fantasy-add]");
-    const fantasyRemove = event.target.closest("[data-fantasy-remove]");
-    if (fantasyAdd || fantasyRemove) {
-      if (!state.activeProfile || !state.profiles[state.activeProfile]) return;
-      if (!canEditActiveProfile()) {
-        if (supabaseEnabled) alert("Fantasy tím môžeš meniť iba vo vlastnom profile.");
-        renderAll();
-        return;
-      }
-      const current = normalizeFantasyPicks(state.profiles[state.activeProfile].fantasyPicks);
-      if (fantasyAdd) {
-        const player = fantasyPlayerById(fantasyAdd.dataset.fantasyAdd);
-        const check = canAddFantasyPlayer(player);
-        if (!check.ok) {
-          alert(check.reason);
-          return;
-        }
-        state.profiles[state.activeProfile].fantasyPicks = [...current, player.id];
-      } else {
-        state.profiles[state.activeProfile].fantasyPicks = current.filter((id) => id !== fantasyRemove.dataset.fantasyRemove);
-      }
-      save();
-      renderFantasy();
-      if (supabaseEnabled) {
-        try { await saveOnlineFantasy(); } catch (error) { alert(error.message || "Fantasy tím sa nepodarilo uložiť. Ak je toto online verzia, spusti aktualizovaný schema.sql v Supabase. Ak je toto online verzia, spusti aktualizovan? schema.sql v Supabase."); await loadOnlineState(); }
-      }
-      return;
-    }
-
     const jokerButton = event.target.closest("[data-joker]");
     if (jokerButton) {
       const id = jokerButton.dataset.joker;
@@ -1749,8 +1128,6 @@ function renderAll() {
   renderViewTabs();
   if (state.activeView === "groups") {
     renderGroupPicks();
-  } else if (state.activeView === "fantasy") {
-    renderFantasy();
   } else {
     renderMatches();
   }
