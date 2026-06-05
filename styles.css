@@ -1154,6 +1154,28 @@ h2 {
   box-shadow: 0 0 0 3px rgba(52, 64, 246, 0.12);
 }
 
+.awards-save-btn {
+  justify-self: end;
+  border: 0;
+  border-radius: 8px;
+  padding: 13px 20px;
+  color: #fff;
+  background: var(--primary);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 12px 28px rgba(52, 64, 246, 0.18);
+}
+
+.awards-save-btn:hover {
+  background: #2734e8;
+}
+
+.awards-save-btn:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
 .group-pick-head {
   display: flex;
   align-items: center;

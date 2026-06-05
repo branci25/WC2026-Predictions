@@ -700,6 +700,26 @@ function findPlayerFromAwardInput(value, award) {
     || awardPlayerPool(award).find((player) => player.display_name.toLowerCase() === trimmed);
 }
 
+function collectAwardTipInputs() {
+  const nextTips = {};
+  const invalidAwards = [];
+  AWARD_CATEGORIES.forEach((award) => {
+    const input = els.matches.querySelector(`[data-award-input="${award.code}"]`);
+    const value = input?.value?.trim() || "";
+    if (!value) {
+      nextTips[award.code] = null;
+      return;
+    }
+    const player = findPlayerFromAwardInput(value, award);
+    if (!player) {
+      invalidAwards.push(award.label);
+      return;
+    }
+    nextTips[award.code] = player.id;
+  });
+  return { nextTips, invalidAwards };
+}
+
 function normalizeFantasyPicks(picks = []) {
   const validIds = new Set(FANTASY_PLAYERS.map((player) => player.id));
   return [...new Set(Array.isArray(picks) ? picks : [])].filter((id) => validIds.has(id)).slice(0, FANTASY_SQUAD_SIZE);
@@ -1211,6 +1231,7 @@ function renderAwards() {
           `;
         }).join("")}
       </div>
+      ${canEdit && playersReady ? `<button class="awards-save-btn" type="button" data-save-awards>Ulo\u017ei\u0165 bonusov\u00e9 tipy</button>` : ""}
     </section>
   `;
 }
@@ -1511,14 +1532,17 @@ async function saveOnlineFantasy() {
   await loadOnlineState();
 }
 
-async function saveOnlineAwardTip(awardCode) {
+async function saveOnlineAwardTips() {
   const session = requireActiveSession();
   if (!session) return;
-  await supabaseRpc("set_award_tip", {
-    p_session_token: session.token,
-    p_award_code: awardCode,
-    p_picked_player_id: state.profiles[state.activeProfile].awardTips?.[awardCode] || null,
-  });
+  const tips = normalizeAwardTips(state.profiles[state.activeProfile].awardTips);
+  for (const award of AWARD_CATEGORIES) {
+    await supabaseRpc("set_award_tip", {
+      p_session_token: session.token,
+      p_award_code: award.code,
+      p_picked_player_id: tips[award.code] || null,
+    });
+  }
   await loadOnlineState();
 }
 
@@ -1798,6 +1822,35 @@ function bindEvents() {
   });
 
   els.matches.addEventListener("click", async (event) => {
+    const awardsSave = event.target.closest("[data-save-awards]");
+    if (awardsSave) {
+      if (!state.activeProfile || !state.profiles[state.activeProfile]) return;
+      if (!canEditActiveProfile()) {
+        if (supabaseEnabled) alert("Bonusov\u00e9 tipy m\u00f4\u017ee\u0161 meni\u0165 iba vo vlastnom profile.");
+        renderAll();
+        return;
+      }
+      const { nextTips, invalidAwards } = collectAwardTipInputs();
+      if (invalidAwards.length) {
+        alert(`Vyber hr\u00e1\u010da zo zoznamu pri: ${invalidAwards.join(", ")}.`);
+        return;
+      }
+      awardsSave.disabled = true;
+      awardsSave.textContent = "Uklad\u00e1m...";
+      state.profiles[state.activeProfile].awardTips = normalizeAwardTips(nextTips);
+      save();
+      if (supabaseEnabled) {
+        try {
+          await saveOnlineAwardTips();
+        } catch (error) {
+          alert(error.message || "Bonusov\u00e9 tipy sa nepodarilo ulo\u017ei\u0165.");
+          await loadOnlineState();
+          return;
+        }
+      }
+      renderAll();
+      return;
+    }
 
     const fantasyAdd = event.target.closest("[data-fantasy-add]");
     const fantasyRemove = event.target.closest("[data-fantasy-remove]");
