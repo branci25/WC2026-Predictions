@@ -74,6 +74,26 @@ create table if not exists public.fantasy_picks (
   updated_at timestamptz not null default now()
 );
 
+
+create table if not exists public.world_cup_players (
+  id text primary key,
+  team_name text not null,
+  team_code text not null,
+  squad_no integer not null,
+  position text not null check (position in ('GK', 'DF', 'MF', 'FW')),
+  display_name text not null,
+  shirt_name text,
+  raw_name text,
+  dob date,
+  club text,
+  height_cm integer,
+  source_page integer,
+  source_version text not null,
+  source_url text not null,
+  updated_at timestamptz not null default now(),
+  unique (team_code, squad_no)
+);
+
 alter table public.players enable row level security;
 alter table public.player_sessions enable row level security;
 alter table public.matches enable row level security;
@@ -81,6 +101,7 @@ alter table public.chat_messages enable row level security;
 alter table public.match_tips enable row level security;
 alter table public.group_order_tips enable row level security;
 alter table public.fantasy_picks enable row level security;
+alter table public.world_cup_players enable row level security;
 
 -- Recreate policies safely when this file is run more than once.
 drop policy if exists "matches are readable by everyone" on public.matches;
@@ -89,6 +110,7 @@ drop policy if exists "match tips are readable by everyone" on public.match_tips
 drop policy if exists "group order tips are readable by everyone" on public.group_order_tips;
 drop policy if exists "chat messages are readable by everyone" on public.chat_messages;
 drop policy if exists "fantasy picks are readable by everyone" on public.fantasy_picks;
+drop policy if exists "world cup players are readable by everyone" on public.world_cup_players;
 -- Public read access for shared game data and leaderboard views.
 create policy "matches are readable by everyone"
 on public.matches for select
@@ -117,6 +139,12 @@ using (true);
 
 create policy "fantasy picks are readable by everyone"
 on public.fantasy_picks for select
+to anon, authenticated
+using (true);
+
+
+create policy "world cup players are readable by everyone"
+on public.world_cup_players for select
 to anon, authenticated
 using (true);
 
