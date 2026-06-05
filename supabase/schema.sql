@@ -94,6 +94,24 @@ create table if not exists public.world_cup_players (
   unique (team_code, squad_no)
 );
 
+
+create table if not exists public.award_tips (
+  player_id uuid not null references public.players(id) on delete cascade,
+  award_code text not null,
+  picked_player_id text references public.world_cup_players(id) on delete set null,
+  updated_at timestamptz not null default now(),
+  primary key (player_id, award_code),
+  constraint award_tips_valid_award check (award_code in (
+    'golden_boot',
+    'golden_ball',
+    'silver_ball',
+    'bronze_ball',
+    'golden_glove',
+    'best_young_player',
+    'most_potm_awards'
+  ))
+);
+
 alter table public.players enable row level security;
 alter table public.player_sessions enable row level security;
 alter table public.matches enable row level security;
@@ -102,6 +120,7 @@ alter table public.match_tips enable row level security;
 alter table public.group_order_tips enable row level security;
 alter table public.fantasy_picks enable row level security;
 alter table public.world_cup_players enable row level security;
+alter table public.award_tips enable row level security;
 
 -- Recreate policies safely when this file is run more than once.
 drop policy if exists "matches are readable by everyone" on public.matches;
@@ -111,6 +130,7 @@ drop policy if exists "group order tips are readable by everyone" on public.grou
 drop policy if exists "chat messages are readable by everyone" on public.chat_messages;
 drop policy if exists "fantasy picks are readable by everyone" on public.fantasy_picks;
 drop policy if exists "world cup players are readable by everyone" on public.world_cup_players;
+drop policy if exists "award tips are readable by everyone" on public.award_tips;
 -- Public read access for shared game data and leaderboard views.
 create policy "matches are readable by everyone"
 on public.matches for select
@@ -145,6 +165,12 @@ using (true);
 
 create policy "world cup players are readable by everyone"
 on public.world_cup_players for select
+to anon, authenticated
+using (true);
+
+
+create policy "award tips are readable by everyone"
+on public.award_tips for select
 to anon, authenticated
 using (true);
 
@@ -433,6 +459,61 @@ begin
 end;
 $$;
 
+
+create or replace function public.set_award_tip(
+  p_session_token uuid,
+  p_award_code text,
+  p_picked_player_id text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_player_id uuid;
+  v_position text;
+  v_dob date;
+begin
+  v_player_id := public.touch_session(p_session_token);
+
+  if p_award_code not in (
+    'golden_boot',
+    'golden_ball',
+    'silver_ball',
+    'bronze_ball',
+    'golden_glove',
+    'best_young_player',
+    'most_potm_awards'
+  ) then
+    raise exception 'Invalid award';
+  end if;
+
+  if p_picked_player_id is not null then
+    select position, dob into v_position, v_dob
+    from public.world_cup_players
+    where id = p_picked_player_id;
+
+    if v_position is null then
+      raise exception 'Invalid player';
+    end if;
+
+    if p_award_code = 'golden_glove' and v_position <> 'GK' then
+      raise exception 'Golden glove must be a goalkeeper';
+    end if;
+
+    if p_award_code = 'best_young_player' and (v_dob is null or v_dob < date '2005-01-01') then
+      raise exception 'Best young player must be born in 2005 or later';
+    end if;
+  end if;
+
+  insert into public.award_tips (player_id, award_code, picked_player_id, updated_at)
+  values (v_player_id, p_award_code, p_picked_player_id, now())
+  on conflict (player_id, award_code)
+  do update set picked_player_id = excluded.picked_player_id, updated_at = now();
+end;
+$$;
+
 create or replace function public.send_chat_message(
   p_session_token uuid,
   p_body text
@@ -465,5 +546,6 @@ grant execute on function public.set_match_tip(uuid, integer, integer, integer) 
 grant execute on function public.set_match_joker(uuid, integer, boolean) to anon, authenticated;
 grant execute on function public.set_group_order_tip(uuid, text, text[]) to anon, authenticated;
 grant execute on function public.set_fantasy_picks(uuid, text[]) to anon, authenticated;
+grant execute on function public.set_award_tip(uuid, text, text) to anon, authenticated;
 grant execute on function public.set_match_result(uuid, integer, integer, integer) to anon, authenticated;
 grant execute on function public.send_chat_message(uuid, text) to anon, authenticated;

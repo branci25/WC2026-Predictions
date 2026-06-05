@@ -38,6 +38,17 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const SESSION_KEY = "ms2026-supabase-sessions-v1";
 const TIP_LOCK_MINUTES = 10;
 const MAX_JOKERS = 2;
+const YOUNG_PLAYER_CUTOFF = "2005-01-01";
+const AWARD_CATEGORIES = [
+  { code: "golden_boot", label: "Najlep\u0161\u00ed strelec", hint: "Golden Boot", filter: "outfield" },
+  { code: "golden_ball", label: "Golden Ball", hint: "Najlep\u0161\u00ed hr\u00e1\u010d turnaja", filter: "all" },
+  { code: "silver_ball", label: "Silver Ball", hint: "Druh\u00fd najlep\u0161\u00ed hr\u00e1\u010d", filter: "all" },
+  { code: "bronze_ball", label: "Bronze Ball", hint: "Tret\u00ed najlep\u0161\u00ed hr\u00e1\u010d", filter: "all" },
+  { code: "golden_glove", label: "Golden Glove", hint: "Najlep\u0161\u00ed brank\u00e1r", filter: "gk" },
+  { code: "best_young_player", label: "Najlep\u0161\u00ed mlad\u00fd hr\u00e1\u010d", hint: "Naroden\u00fd 2005 alebo nesk\u00f4r", filter: "young" },
+  { code: "most_potm_awards", label: "Najviac hr\u00e1\u010dov z\u00e1pasu", hint: "Najviac POTM ocenen\u00ed", filter: "all" },
+];
+let worldCupPlayers = [];
 const FANTASY_BUDGET = 100;
 const FANTASY_SQUAD_SIZE = 15;
 const FANTASY_TEAM_LIMIT = 3;
@@ -556,6 +567,7 @@ const els = {
   matchesViewBtn: document.querySelector("#matchesViewBtn"),
   groupsViewBtn: document.querySelector("#groupsViewBtn"),
   knockoutViewBtn: document.querySelector("#knockoutViewBtn"),
+  awardsViewBtn: document.querySelector("#awardsViewBtn"),
   fantasyViewBtn: document.querySelector("#fantasyViewBtn"),
   fantasyPositionFilter: document.querySelector("#fantasyPositionFilter"),
   fantasyTeamFilter: document.querySelector("#fantasyTeamFilter"),
@@ -594,10 +606,10 @@ function defaultState() {
     activeProfile: "Brano",
     authProfile: "",
     profiles: {
-      Brano: { tips: Object.fromEntries(BRANO_TIPS.map((tip) => [tip.matchId, { home: tip.home, away: tip.away }])), groupPicks: defaultGroupPicks(), fantasyPicks: [] },
-      Samo: { tips: {}, groupPicks: defaultGroupPicks(), fantasyPicks: [] },
-      Tobo: { tips: {}, groupPicks: defaultGroupPicks(), fantasyPicks: [] },
-      Erik: { tips: {}, groupPicks: defaultGroupPicks(), fantasyPicks: [] },
+      Brano: { tips: Object.fromEntries(BRANO_TIPS.map((tip) => [tip.matchId, { home: tip.home, away: tip.away }])), groupPicks: defaultGroupPicks(), fantasyPicks: [], awardTips: {} },
+      Samo: { tips: {}, groupPicks: defaultGroupPicks(), fantasyPicks: [], awardTips: {} },
+      Tobo: { tips: {}, groupPicks: defaultGroupPicks(), fantasyPicks: [], awardTips: {} },
+      Erik: { tips: {}, groupPicks: defaultGroupPicks(), fantasyPicks: [], awardTips: {} },
     },
     results,
     sessions: loadSessions(),
@@ -620,9 +632,10 @@ function normalizeState(saved) {
       tips: normalizedTips,
       groupPicks: normalizeGroupPicks(merged.profiles[name].groupPicks),
       fantasyPicks: normalizeFantasyPicks(merged.profiles[name].fantasyPicks),
+      awardTips: normalizeAwardTips(merged.profiles[name].awardTips),
     };
   });
-  if (!["matches", "groups", "knockout"].includes(merged.activeView)) merged.activeView = "matches";
+  if (!["matches", "groups", "knockout", "awards"].includes(merged.activeView)) merged.activeView = "matches";
   if (!merged.profiles[merged.activeProfile]) merged.activeProfile = Object.keys(merged.profiles)[0] || "";
   if (!merged.sessions?.[merged.authProfile]) merged.authProfile = "";
   return merged;
@@ -647,6 +660,44 @@ function cleanScore(value) {
 function isFinished(match) {
   const result = state.results[match.id];
   return result?.home !== null && result?.away !== null;
+}
+
+
+function normalizeAwardTips(tips = {}) {
+  const allowed = new Set(AWARD_CATEGORIES.map((award) => award.code));
+  return Object.fromEntries(Object.entries(tips || {}).filter(([code, value]) => allowed.has(code) && (value === null || typeof value === "string")));
+}
+
+function awardByCode(code) {
+  return AWARD_CATEGORIES.find((award) => award.code === code);
+}
+
+function playerById(id) {
+  return worldCupPlayers.find((player) => player.id === id);
+}
+
+function playerOptionLabel(player) {
+  if (!player) return "";
+  return `${player.display_name} (${player.team_name}, ${player.position})`;
+}
+
+function awardPlayerPool(award) {
+  if (!award) return worldCupPlayers;
+  if (award.filter === "gk") return worldCupPlayers.filter((player) => player.position === "GK");
+  if (award.filter === "young") return worldCupPlayers.filter((player) => player.dob && player.dob >= YOUNG_PLAYER_CUTOFF);
+  if (award.filter === "outfield") return worldCupPlayers.filter((player) => player.position !== "GK");
+  return worldCupPlayers;
+}
+
+function playerDatalistOptions(award) {
+  return awardPlayerPool(award).map((player) => `<option value="${escapeHtml(playerOptionLabel(player))}" data-player-id="${escapeHtml(player.id)}"></option>`).join("");
+}
+
+function findPlayerFromAwardInput(value, award) {
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) return null;
+  return awardPlayerPool(award).find((player) => playerOptionLabel(player).toLowerCase() === trimmed)
+    || awardPlayerPool(award).find((player) => player.display_name.toLowerCase() === trimmed);
 }
 
 function normalizeFantasyPicks(picks = []) {
@@ -994,17 +1045,20 @@ function renderViewTabs() {
   const isMatches = state.activeView === "matches";
   const isGroups = state.activeView === "groups";
   const isKnockout = state.activeView === "knockout";
+  const isAwards = state.activeView === "awards";
   const isFantasy = state.activeView === "fantasy";
   els.matchesViewBtn.classList.toggle("active", isMatches);
   els.groupsViewBtn.classList.toggle("active", isGroups);
   els.knockoutViewBtn.classList.toggle("active", isKnockout);
+  els.awardsViewBtn?.classList.toggle("active", isAwards);
   els.fantasyViewBtn?.classList.toggle("active", isFantasy);
   els.matchesViewBtn.setAttribute("aria-selected", String(isMatches));
   els.groupsViewBtn.setAttribute("aria-selected", String(isGroups));
   els.knockoutViewBtn.setAttribute("aria-selected", String(isKnockout));
+  els.awardsViewBtn?.setAttribute("aria-selected", String(isAwards));
   els.fantasyViewBtn?.setAttribute("aria-selected", String(isFantasy));
   document.querySelectorAll(".match-filter").forEach((el) => {
-    el.hidden = isGroups || isFantasy;
+    el.hidden = isGroups || isFantasy || isAwards;
   });
   if (els.groupFilterLabel) els.groupFilterLabel.hidden = !isMatches;
   if (els.fantasyFilters) els.fantasyFilters.hidden = !isFantasy;
@@ -1119,6 +1173,46 @@ function scoreGroupTeam(score, team, pickedIndex) {
   const actualIndex = score.actualOrder.indexOf(team);
   if (actualIndex === pickedIndex) return "+1";
   return "0";
+}
+
+
+function renderAwards() {
+  if (!state.activeProfile || !state.profiles[state.activeProfile]) {
+    els.matches.innerHTML = `<div class="empty-state">Vytvor alebo prihl\u00e1s hr\u00e1\u010da, aby si mohol tipova\u0165 bonusov\u00e9 ceny.</div>`;
+    return;
+  }
+  const canEdit = canEditActiveProfile();
+  const tips = normalizeAwardTips(state.profiles[state.activeProfile].awardTips);
+  const playersReady = worldCupPlayers.length > 0;
+  els.matches.innerHTML = `
+    <section class="awards-board">
+      <div class="awards-summary panel">
+        <div>
+          <h3>Bonusov\u00e9 tipy</h3>
+          <p>Tipy na individu\u00e1lne ceny turnaja. Meni\u0165 m\u00f4\u017ee\u0161 iba vlastn\u00fd profil.</p>
+        </div>
+        <div class="awards-count"><strong>${Object.values(tips).filter(Boolean).length}/${AWARD_CATEGORIES.length}</strong><span>vyplnen\u00e9</span></div>
+      </div>
+      ${!playersReady ? `<div class="empty-state">Hr\u00e1\u010di e\u0161te nie s\u00fa na\u010d\u00edtan\u00ed zo Supabase. Spusti <code>supabase/world_cup_players.sql</code> v SQL Editore.</div>` : ""}
+      <div class="awards-grid">
+        ${AWARD_CATEGORIES.map((award) => {
+          const selected = playerById(tips[award.code]);
+          const inputValue = selected ? playerOptionLabel(selected) : "";
+          return `
+            <article class="award-card panel">
+              <div class="award-card-head">
+                <div><h3>${escapeHtml(award.label)}</h3><p>${escapeHtml(award.hint)}</p></div>
+                <span>${awardPlayerPool(award).length}</span>
+              </div>
+              <input type="text" list="award-list-${award.code}" data-award-input="${award.code}" value="${escapeHtml(inputValue)}" placeholder="Za\u010dni p\u00edsa\u0165 meno hr\u00e1\u010da" ${canEdit && playersReady ? "" : "disabled"}>
+              <datalist id="award-list-${award.code}">${playerDatalistOptions(award)}</datalist>
+              <small>${selected ? `${escapeHtml(selected.club || "")} &middot; ${escapeHtml(selected.team_name)}` : "Bez tipu"}</small>
+            </article>
+          `;
+        }).join("")}
+      </div>
+    </section>
+  `;
 }
 
 function renderFantasy() {
@@ -1267,20 +1361,24 @@ async function loadOnlineState() {
     const matchTipsRequest = supabaseRequest("match_tips?select=player_id,match_id,home_score,away_score,is_joker")
       .catch(() => supabaseRequest("match_tips?select=player_id,match_id,home_score,away_score"));
     const fantasyPicksRequest = supabaseRequest("fantasy_picks?select=player_id,player_ids").catch(() => []);
-    const [players, remoteMatches, matchTips, groupTips, chatMessages, fantasyPicks] = await Promise.all([
+    const awardTipsRequest = supabaseRequest("award_tips?select=player_id,award_code,picked_player_id").catch(() => []);
+    const worldCupPlayersRequest = supabaseRequest("world_cup_players?select=id,team_name,team_code,squad_no,position,display_name,shirt_name,dob,club,height_cm&order=team_name.asc&order=squad_no.asc&limit=2000").catch(() => []);
+    const [players, remoteMatches, matchTips, groupTips, chatMessages, fantasyPicks, awardTips, fetchedWorldCupPlayers] = await Promise.all([
       supabaseRequest("players?select=id,display_name,is_admin&order=created_at.asc"),
       supabaseRequest("matches?select=id,match_date,match_time,city,stadium,home_score,away_score&order=id.asc"),
       matchTipsRequest,
       supabaseRequest("group_order_tips?select=player_id,group_code,team_order"),
       supabaseRequest("chat_messages?select=id,player_id,body,created_at&order=created_at.asc&limit=80").catch(() => []),
       fantasyPicksRequest,
+      awardTipsRequest,
+      worldCupPlayersRequest,
     ]);
 
     const nextProfiles = {};
     const namesById = new Map();
     players.forEach((player) => {
       namesById.set(player.id, player.display_name);
-      nextProfiles[player.display_name] = { tips: {}, groupPicks: defaultGroupPicks(), fantasyPicks: [] };
+      nextProfiles[player.display_name] = { tips: {}, groupPicks: defaultGroupPicks(), fantasyPicks: [], awardTips: {} };
       if (state.sessions?.[player.display_name]) {
         state.sessions[player.display_name].playerId = player.id;
         state.sessions[player.display_name].isAdmin = player.is_admin;
@@ -1312,6 +1410,14 @@ async function loadOnlineState() {
       if (!name || !nextProfiles[name]) return;
       nextProfiles[name].fantasyPicks = normalizeFantasyPicks(pick.player_ids);
     });
+
+    awardTips.forEach((tip) => {
+      const name = namesById.get(tip.player_id);
+      if (!name || !nextProfiles[name]) return;
+      nextProfiles[name].awardTips[tip.award_code] = tip.picked_player_id;
+    });
+
+    worldCupPlayers = fetchedWorldCupPlayers;
 
     state.profiles = nextProfiles;
     if (!state.profiles[state.authProfile] || !state.sessions[state.authProfile]) state.authProfile = "";
@@ -1401,6 +1507,17 @@ async function saveOnlineFantasy() {
   await supabaseRpc("set_fantasy_picks", {
     p_session_token: session.token,
     p_player_ids: normalizeFantasyPicks(state.profiles[state.activeProfile].fantasyPicks),
+  });
+  await loadOnlineState();
+}
+
+async function saveOnlineAwardTip(awardCode) {
+  const session = requireActiveSession();
+  if (!session) return;
+  await supabaseRpc("set_award_tip", {
+    p_session_token: session.token,
+    p_award_code: awardCode,
+    p_picked_player_id: state.profiles[state.activeProfile].awardTips?.[awardCode] || null,
   });
   await loadOnlineState();
 }
@@ -1568,6 +1685,12 @@ function bindEvents() {
 
   els.knockoutViewBtn.addEventListener("click", () => {
     state.activeView = "knockout";
+    save();
+    renderAll();
+  });
+
+  els.awardsViewBtn?.addEventListener("click", () => {
+    state.activeView = "awards";
     save();
     renderAll();
   });
@@ -1749,6 +1872,8 @@ function renderAll() {
   renderViewTabs();
   if (state.activeView === "groups") {
     renderGroupPicks();
+  } else if (state.activeView === "awards") {
+    renderAwards();
   } else if (state.activeView === "fantasy") {
     renderFantasy();
   } else {
