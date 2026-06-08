@@ -390,7 +390,7 @@ h2 {
 
 .leader-header {
   display: grid;
-  grid-template-columns: 22px minmax(112px, 1fr) 28px 28px 36px;
+  grid-template-columns: 22px minmax(88px, 1fr) 26px 26px 28px 36px;
   align-items: center;
   gap: 4px;
   padding: 0 6px;
@@ -411,7 +411,7 @@ h2 {
 
 .leader-row {
   display: grid;
-  grid-template-columns: 22px minmax(112px, 1fr) 28px 28px 36px;
+  grid-template-columns: 22px minmax(88px, 1fr) 26px 26px 28px 36px;
   align-items: center;
   gap: 4px;
   min-height: 46px;
@@ -1738,7 +1738,7 @@ td:nth-child(n + 3) {
 @media (max-width: 360px) {
   .leader-header,
   .leader-row {
-    grid-template-columns: 20px minmax(98px, 1fr) 24px 24px 32px;
+    grid-template-columns: 18px minmax(74px, 1fr) 23px 23px 25px 31px;
     gap: 4px;
   }
 

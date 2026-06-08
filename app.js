@@ -39,6 +39,7 @@ const SESSION_KEY = "ms2026-supabase-sessions-v1";
 const TIP_LOCK_MINUTES = 10;
 const MAX_JOKERS = 2;
 const YOUNG_PLAYER_CUTOFF = "2005-01-01";
+const AWARD_POINTS = 10;
 const AWARD_CATEGORIES = [
   { code: "golden_boot", label: "Najlep\u0161\u00ed strelec", hint: "Golden Boot", filter: "outfield" },
   { code: "golden_ball", label: "Golden Ball", hint: "Najlep\u0161\u00ed hr\u00e1\u010d turnaja", filter: "all" },
@@ -612,13 +613,14 @@ function defaultState() {
       Erik: { tips: {}, groupPicks: defaultGroupPicks(), fantasyPicks: [], awardTips: {} },
     },
     results,
+    awardResults: {},
     sessions: loadSessions(),
   };
 }
 
 function normalizeState(saved) {
   const base = defaultState();
-  const merged = { ...base, ...saved, profiles: saved?.profiles || base.profiles, sessions: loadSessions(), authProfile: saved?.authProfile || "", chatMessages: saved?.chatMessages || [] };
+  const merged = { ...base, ...saved, profiles: saved?.profiles || base.profiles, awardResults: normalizeAwardResults(saved?.awardResults || base.awardResults), sessions: loadSessions(), authProfile: saved?.authProfile || "", chatMessages: saved?.chatMessages || [] };
   Object.keys(merged.profiles).forEach((name) => {
     const normalizedTips = {};
     Object.entries(merged.profiles[name].tips || {}).forEach(([matchId, tip]) => {
@@ -666,6 +668,10 @@ function isFinished(match) {
 function normalizeAwardTips(tips = {}) {
   const allowed = new Set(AWARD_CATEGORIES.map((award) => award.code));
   return Object.fromEntries(Object.entries(tips || {}).filter(([code, value]) => allowed.has(code) && (value === null || typeof value === "string")));
+}
+
+function normalizeAwardResults(results = {}) {
+  return normalizeAwardTips(results);
 }
 
 function awardByCode(code) {
@@ -815,7 +821,27 @@ function profileStats(profileName) {
     }
   });
   const groupPoints = scoreGroupPicks(profileName).total;
-  return { points: matchPoints + groupPoints, matchPoints, groupPoints, settled, tipped };
+  const awardPoints = scoreAwardTips(profileName).total;
+  return { points: matchPoints + groupPoints + awardPoints, matchPoints, groupPoints, awardPoints, settled, tipped };
+}
+
+function scoreAwardTips(profileName = state.activeProfile) {
+  const tips = normalizeAwardTips(state.profiles[profileName]?.awardTips || {});
+  const results = normalizeAwardResults(state.awardResults || {});
+  let total = 0;
+  const byAward = {};
+  AWARD_CATEGORIES.forEach((award) => {
+    const actualPlayerId = results[award.code];
+    const pickedPlayerId = tips[award.code];
+    if (!actualPlayerId) {
+      byAward[award.code] = { points: null, complete: false };
+      return;
+    }
+    const points = pickedPlayerId && pickedPlayerId === actualPlayerId ? AWARD_POINTS : 0;
+    total += points;
+    byAward[award.code] = { points, complete: true, actualPlayerId };
+  });
+  return { total, byAward };
 }
 
 function getGroups() {
@@ -1039,6 +1065,7 @@ function renderLeaderboard() {
       <span>Hráč</span>
       <span>Záp.</span>
       <span>Por.</span>
+      <span>Bon.</span>
       <span>Spolu</span>
     </div>
     ${rows.map((row, index) => `
@@ -1047,6 +1074,7 @@ function renderLeaderboard() {
       <span class="leader-name">${escapeHtml(row.name)}</span>
       <span class="leader-subpoints">${row.matchPoints}</span>
       <span class="leader-subpoints">${row.groupPoints}</span>
+      <span class="leader-subpoints">${row.awardPoints}</span>
       <span class="leader-points">${row.points}</span>
     </button>
   `).join("")}
@@ -1383,8 +1411,9 @@ async function loadOnlineState() {
       .catch(() => supabaseRequest("match_tips?select=player_id,match_id,home_score,away_score"));
     const fantasyPicksRequest = supabaseRequest("fantasy_picks?select=player_id,player_ids").catch(() => []);
     const awardTipsRequest = supabaseRequest("award_tips?select=player_id,award_code,picked_player_id").catch(() => []);
+    const awardResultsRequest = supabaseRequest("award_results?select=award_code,picked_player_id").catch(() => []);
     const worldCupPlayersRequest = supabaseRequest("world_cup_players?select=id,team_name,team_code,squad_no,position,display_name,shirt_name,dob,club,height_cm&order=team_name.asc&order=squad_no.asc&limit=2000").catch(() => []);
-    const [players, remoteMatches, matchTips, groupTips, chatMessages, fantasyPicks, awardTips, fetchedWorldCupPlayers] = await Promise.all([
+    const [players, remoteMatches, matchTips, groupTips, chatMessages, fantasyPicks, awardTips, awardResults, fetchedWorldCupPlayers] = await Promise.all([
       supabaseRequest("players?select=id,display_name,is_admin&order=created_at.asc"),
       supabaseRequest("matches?select=id,match_date,match_time,city,stadium,home_score,away_score&order=id.asc"),
       matchTipsRequest,
@@ -1392,6 +1421,7 @@ async function loadOnlineState() {
       supabaseRequest("chat_messages?select=id,player_id,body,created_at&order=created_at.asc&limit=80").catch(() => []),
       fantasyPicksRequest,
       awardTipsRequest,
+      awardResultsRequest,
       worldCupPlayersRequest,
     ]);
 
@@ -1439,6 +1469,7 @@ async function loadOnlineState() {
     });
 
     worldCupPlayers = fetchedWorldCupPlayers;
+    state.awardResults = normalizeAwardResults(Object.fromEntries(awardResults.map((result) => [result.award_code, result.picked_player_id])));
 
     state.profiles = nextProfiles;
     if (!state.profiles[state.authProfile] || !state.sessions[state.authProfile]) state.authProfile = "";
