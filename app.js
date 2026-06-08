@@ -37,6 +37,7 @@ const SUPABASE_URL = "https://hhildstrkldmxcqpmjqo.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoaWxkc3Rya2xkbXhjcXBtanFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NjIzMjYsImV4cCI6MjA5NTQzODMyNn0.FEHi9ThOiKX0_ggvuezmCCpFJE353Vj-ghe2sUjdE1g";
 const SESSION_KEY = "ms2026-supabase-sessions-v1";
 const TIP_LOCK_MINUTES = 10;
+const EXACT_SCORE_POINTS = 6;
 const MAX_JOKERS = 2;
 const YOUNG_PLAYER_CUTOFF = "2005-01-01";
 const AWARD_POINTS = 10;
@@ -783,7 +784,7 @@ function baseScoreTip(match, profileName = state.activeProfile) {
   const exactHome = result.home === tip.home;
   const exactAway = result.away === tip.away;
 
-  if (exactHome && exactAway) return 5;
+  if (exactHome && exactAway) return EXACT_SCORE_POINTS;
   if (sameOutcome && (sameDiff || exactHome || exactAway)) return 4;
   if (sameOutcome) return 3;
   if (exactHome || exactAway) return 1;
@@ -798,7 +799,7 @@ function scoreTip(match, profileName = state.activeProfile) {
 
 function scoreToneClass(score, joker = false) {
   if (score === null) return "";
-  const maxScore = joker ? 10 : 5;
+  const maxScore = joker ? EXACT_SCORE_POINTS * 2 : EXACT_SCORE_POINTS;
   const ratio = maxScore ? score / maxScore : 0;
   if (ratio >= 1) return "score-perfect";
   if (ratio >= 0.75) return "score-good";
