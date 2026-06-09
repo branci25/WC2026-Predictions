@@ -1067,7 +1067,6 @@ function renderLeaderboard() {
 
   els.leaderboard.innerHTML = `
     <div class="leader-header">
-      <span>#</span>
       <span>Hráč</span>
       <span>Záp.</span>
       <span>Por.</span>
@@ -1078,7 +1077,6 @@ function renderLeaderboard() {
       const podiumClass = index < 3 ? `podium podium-${index + 1}` : "";
       return `
     <button class="leader-row ${podiumClass} ${row.name === state.activeProfile ? "active" : ""} ${row.name === state.authProfile ? "owned" : ""}" type="button" data-profile="${escapeHtml(row.name)}">
-      <span class="rank">${index + 1}</span>
       <span class="leader-name">${escapeHtml(row.name)}</span>
       <span class="leader-subpoints">${row.matchPoints}</span>
       <span class="leader-subpoints">${row.groupPoints}</span>
