@@ -1074,8 +1074,10 @@ function renderLeaderboard() {
       <span>Bon.</span>
       <span>Spolu</span>
     </div>
-    ${rows.map((row, index) => `
-    <button class="leader-row ${row.name === state.activeProfile ? "active" : ""} ${row.name === state.authProfile ? "owned" : ""}" type="button" data-profile="${escapeHtml(row.name)}">
+    ${rows.map((row, index) => {
+      const podiumClass = index < 3 ? `podium podium-${index + 1}` : "";
+      return `
+    <button class="leader-row ${podiumClass} ${row.name === state.activeProfile ? "active" : ""} ${row.name === state.authProfile ? "owned" : ""}" type="button" data-profile="${escapeHtml(row.name)}">
       <span class="rank">${index + 1}</span>
       <span class="leader-name">${escapeHtml(row.name)}</span>
       <span class="leader-subpoints">${row.matchPoints}</span>
@@ -1083,7 +1085,8 @@ function renderLeaderboard() {
       <span class="leader-subpoints">${row.awardPoints}</span>
       <span class="leader-points">${row.points}</span>
     </button>
-  `).join("")}
+  `;
+    }).join("")}
   `;
 
   document.querySelectorAll("[data-profile]").forEach((button) => {

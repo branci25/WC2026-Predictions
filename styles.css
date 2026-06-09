@@ -545,6 +545,52 @@ h2 {
   background: var(--primary-quiet);
 }
 
+.leader-row.podium {
+  border-left: 4px solid var(--podium-accent);
+  padding-left: 4px;
+  background:
+    linear-gradient(90deg, var(--podium-soft), rgba(255, 255, 255, 0.82) 45%, var(--field));
+}
+
+.leader-row.podium.active {
+  border-left-color: var(--podium-accent);
+  background:
+    linear-gradient(90deg, var(--podium-soft), rgba(232, 237, 255, 0.95) 52%, var(--primary-soft));
+}
+
+.leader-row.podium-1 {
+  --podium-accent: #d49a21;
+  --podium-soft: rgba(255, 214, 112, 0.24);
+}
+
+.leader-row.podium-2 {
+  --podium-accent: #9aa5b5;
+  --podium-soft: rgba(204, 213, 226, 0.3);
+}
+
+.leader-row.podium-3 {
+  --podium-accent: #b97845;
+  --podium-soft: rgba(221, 159, 104, 0.23);
+}
+
+.leader-row.podium .rank {
+  position: relative;
+  padding-left: 12px;
+}
+
+.leader-row.podium .rank::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--podium-accent);
+  box-shadow: 0 0 0 3px var(--podium-soft);
+  transform: translateY(-50%);
+}
+
 .rank {
   width: auto;
   height: auto;
