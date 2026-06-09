@@ -2006,7 +2006,7 @@ async function moveTeamStep(group, team, direction) {
 }
 
 function updateCountdown() {
-  const start = new Date("2026-06-11T00:00:00");
+  const start = new Date("2026-06-11T21:00:00");
   const diff = Math.max(0, start.getTime() - Date.now());
   const totalSeconds = Math.floor(diff / 1000);
   const days = Math.floor(totalSeconds / 86400);
