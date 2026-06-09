@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260609-2">
+    <link rel="stylesheet" href="styles.css?v=20260609-3">
   </head>
   <body>
     <section class="tournament-strip" aria-label="FIFA World Cup 2026">
@@ -71,6 +71,19 @@
           <button id="authSubmitBtn" type="submit">Pokračovať</button>
         </div>
       </form>
+    </div>
+
+    <div id="matchDetailModal" class="modal-backdrop" hidden>
+      <section class="match-detail-modal" role="dialog" aria-modal="true" aria-labelledby="matchDetailTitle">
+        <div class="modal-head">
+          <div>
+            <h2 id="matchDetailTitle">Detail z&aacute;pasu</h2>
+            <p id="matchDetailMeta" class="match-detail-meta"></p>
+          </div>
+          <button id="closeMatchDetailBtn" class="icon-button" type="button" aria-label="Zavrie&#357;">&times;</button>
+        </div>
+        <div id="matchDetailBody" class="match-detail-body"></div>
+      </section>
     </div>
 
     <main class="app-shell">
@@ -153,6 +166,6 @@
       </aside>
     </main>
 
-    <script src="app.js?v=20260609-2"></script>
+    <script src="app.js?v=20260609-3"></script>
   </body>
 </html>

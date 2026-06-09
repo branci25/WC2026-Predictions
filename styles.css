@@ -283,6 +283,111 @@ button:disabled {
   box-shadow: 0 24px 70px rgba(18, 27, 47, 0.22);
 }
 
+.match-detail-modal {
+  display: grid;
+  gap: 16px;
+  width: min(560px, 100%);
+  max-height: min(720px, calc(100vh - 36px));
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(18, 27, 47, 0.22);
+}
+
+.match-detail-modal h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.match-detail-meta {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.match-detail-body {
+  display: grid;
+  gap: 7px;
+}
+
+.match-detail-head,
+.match-detail-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 1fr) 64px 58px 54px;
+  align-items: center;
+  gap: 8px;
+}
+
+.match-detail-head {
+  padding: 0 10px 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.match-detail-row {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #f8faff;
+}
+
+.match-detail-row.own {
+  border-color: rgba(52, 72, 244, 0.4);
+  background: var(--primary-soft);
+}
+
+.match-detail-player {
+  min-width: 0;
+  color: var(--ink);
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.match-detail-tip {
+  justify-self: start;
+  min-width: 52px;
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: var(--primary-dark);
+  background: rgba(52, 64, 246, 0.09);
+  font-weight: 800;
+  text-align: center;
+}
+
+.match-detail-tip.empty,
+.match-detail-points.empty {
+  color: var(--muted);
+  background: transparent;
+  font-weight: 600;
+}
+
+.match-detail-joker {
+  min-height: 18px;
+  color: #8a6500;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.match-detail-points {
+  color: var(--primary-dark);
+  font-weight: 850;
+  text-align: right;
+}
+
+.match-detail-empty {
+  margin: 0;
+  color: var(--muted);
+}
+
 .modal-head {
   display: flex;
   align-items: center;
@@ -1278,6 +1383,12 @@ h2 {
   box-shadow: var(--shadow);
   backdrop-filter: blur(16px);
   transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  cursor: pointer;
+}
+
+.match-card input,
+.match-card button {
+  cursor: auto;
 }
 
 .match-card:hover,
@@ -1909,6 +2020,16 @@ td:nth-child(n + 3) {
     grid-row: 3;
     justify-items: stretch;
     min-height: 0;
+  }
+
+  .match-detail-head,
+  .match-detail-row {
+    grid-template-columns: minmax(82px, 1fr) 56px 46px 46px;
+    gap: 6px;
+  }
+
+  .match-detail-modal h2 {
+    font-size: 20px;
   }
 
   .bet-inputs,

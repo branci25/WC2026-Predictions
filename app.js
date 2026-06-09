@@ -557,6 +557,11 @@ const els = {
   accountPinInput: document.querySelector("#accountPinInput"),
   authModalError: document.querySelector("#authModalError"),
   authSubmitBtn: document.querySelector("#authSubmitBtn"),
+  matchDetailModal: document.querySelector("#matchDetailModal"),
+  matchDetailTitle: document.querySelector("#matchDetailTitle"),
+  matchDetailMeta: document.querySelector("#matchDetailMeta"),
+  matchDetailBody: document.querySelector("#matchDetailBody"),
+  closeMatchDetailBtn: document.querySelector("#closeMatchDetailBtn"),
   chatMessages: document.querySelector("#chatMessages"),
   chatForm: document.querySelector("#chatForm"),
   chatInput: document.querySelector("#chatInput"),
@@ -1148,7 +1153,7 @@ function renderMatches() {
     const jokerLabel = joker ? "\u017dol\u00edk x2" : `\u017dol\u00edk ${jokerCount()}/${MAX_JOKERS}`;
     const metaLabel = match.round || `Skupina ${match.group}`;
     return `
-      <article class="match-card ${finished ? "finished" : ""} ${tipLocked ? "tip-locked" : ""}">
+      <article class="match-card ${finished ? "finished" : ""} ${tipLocked ? "tip-locked" : ""}" data-match-detail="${match.id}" tabindex="0">
         <div class="match-meta">
           <span class="match-kickoff"><span class="match-date">${formatDate(match.date)}</span><span class="match-time">${match.time}</span></span>
           <span class="match-venue">${match.venue || ""}</span>
@@ -1178,6 +1183,60 @@ function renderMatches() {
       </article>
     `;
   }).join("");
+}
+
+
+function formatTipValue(tip) {
+  if (!tip || tip.home === null || tip.away === null || tip.home === undefined || tip.away === undefined) return "-";
+  return `${tip.home}:${tip.away}`;
+}
+
+function closeMatchDetail() {
+  if (els.matchDetailModal) els.matchDetailModal.hidden = true;
+}
+
+function openMatchDetail(matchId) {
+  const match = byId(matchId);
+  if (!match || !els.matchDetailModal || !els.matchDetailBody) return;
+  const result = state.results[match.id] || { home: null, away: null };
+  const finished = isFinished(match);
+  const locked = isTipLocked(match);
+  const rows = Object.keys(state.profiles)
+    .sort((a, b) => a.localeCompare(b, "sk"))
+    .map((name) => {
+      const tip = state.profiles[name]?.tips?.[match.id];
+      const hasTip = tip?.home !== null && tip?.away !== null && tip?.home !== undefined && tip?.away !== undefined;
+      const ownProfile = state.authProfile || state.activeProfile;
+      const isOwn = name === ownProfile;
+      const canReveal = locked || isOwn;
+      const score = canReveal ? scoreTip(match, name) : null;
+      const joker = canReveal && isJoker(name, match.id);
+      const tipText = canReveal ? formatTipValue(tip) : "skryt\u00e9";
+      return `
+        <div class="match-detail-row ${isOwn ? "own" : ""}">
+          <span class="match-detail-player">${escapeHtml(name)}</span>
+          <span class="match-detail-tip ${hasTip && canReveal ? "" : "empty"}">${tipText}</span>
+          <span class="match-detail-joker">${joker ? "\u017dol\u00edk" : ""}</span>
+          <span class="match-detail-points ${score === null ? "empty" : ""}">${score === null ? "-" : `${score} b`}</span>
+        </div>
+      `;
+    }).join("");
+
+  if (els.matchDetailTitle) els.matchDetailTitle.textContent = `${match.home} - ${match.away}`;
+  if (els.matchDetailMeta) {
+    const resultText = finished ? `V\u00fdsledok ${result.home}:${result.away}` : (locked ? "Tipovanie uzavret\u00e9" : "Tipovanie otvoren\u00e9");
+    els.matchDetailMeta.textContent = `${formatDate(match.date)} - ${match.time} - ${match.venue || match.round || `Skupina ${match.group}`} - ${resultText}`;
+  }
+  els.matchDetailBody.innerHTML = `
+    <div class="match-detail-head">
+      <span>Hr\u00e1\u010d</span>
+      <span>Tip</span>
+      <span></span>
+      <span>Body</span>
+    </div>
+    ${rows || `<p class="match-detail-empty">Zatia\u013e nie s\u00fa vytvoren\u00e9 profily.</p>`}
+  `;
+  els.matchDetailModal.hidden = false;
 }
 
 function renderGroupPicks() {
@@ -1656,6 +1715,11 @@ function bindEvents() {
     if (event.target === els.authModal) closeAuthModal();
   });
 
+  els.matchDetailModal?.addEventListener("click", (event) => {
+    if (event.target === els.matchDetailModal) closeMatchDetail();
+  });
+  els.closeMatchDetailBtn?.addEventListener("click", closeMatchDetail);
+
   els.authForm?.addEventListener("submit", async (event) => {
     event.preventDefault();
     clearAuthError();
@@ -1853,7 +1917,21 @@ function bindEvents() {
     await moveTeamTo(group, data.team, target.dataset.team);
   });
 
+  els.matches.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const detailCard = event.target.closest("[data-match-detail]");
+    if (!detailCard || event.target.closest("input, button, select, textarea, label")) return;
+    event.preventDefault();
+    openMatchDetail(detailCard.dataset.matchDetail);
+  });
+
   els.matches.addEventListener("click", async (event) => {
+    const detailCard = event.target.closest("[data-match-detail]");
+    if (detailCard && !event.target.closest("input, button, select, textarea, label")) {
+      openMatchDetail(detailCard.dataset.matchDetail);
+      return;
+    }
+
     const awardsSave = event.target.closest("[data-save-awards]");
     if (awardsSave) {
       if (!state.activeProfile || !state.profiles[state.activeProfile]) return;
