@@ -2004,11 +2004,26 @@ td:nth-child(n + 3) {
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
-    padding-top: 2px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 12px 30px rgba(18, 27, 47, 0.1);
   }
 
   .match-filters-panel.open {
     display: flex;
+  }
+
+  .match-filters-panel label,
+  .match-filters-panel .admin-toggle {
+    color: #5f6b80;
+  }
+
+  .match-filters-panel input,
+  .match-filters-panel select {
+    background: #fff;
+    color: var(--ink);
   }
 .view-tabs {
     display: grid;
