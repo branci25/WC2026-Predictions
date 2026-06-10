@@ -451,11 +451,15 @@ returns void
 language plpgsql
 security definer
 set search_path = public
-as $$
+as $
 declare
   v_player_id uuid;
 begin
   v_player_id := public.touch_session(p_session_token);
+
+  if (now() at time zone 'Europe/Bratislava') >= timestamp '2026-06-11 21:00:00' then
+    raise exception 'Tournament tips are locked';
+  end if;
 
   insert into public.group_order_tips (player_id, group_code, team_order, updated_at)
   values (v_player_id, upper(trim(p_group_code)), p_team_order, now())
@@ -464,8 +468,7 @@ begin
     team_order = excluded.team_order,
     updated_at = now();
 end;
-$$;
-
+$;
 create or replace function public.set_fantasy_picks(
   p_session_token uuid,
   p_player_ids text[]
@@ -555,13 +558,17 @@ returns void
 language plpgsql
 security definer
 set search_path = public
-as $$
+as $
 declare
   v_player_id uuid;
   v_position text;
   v_dob date;
 begin
   v_player_id := public.touch_session(p_session_token);
+
+  if (now() at time zone 'Europe/Bratislava') >= timestamp '2026-06-11 21:00:00' then
+    raise exception 'Tournament tips are locked';
+  end if;
 
   if p_award_code not in (
     'golden_boot',
@@ -598,8 +605,7 @@ begin
   on conflict (player_id, award_code)
   do update set picked_player_id = excluded.picked_player_id, updated_at = now();
 end;
-$$;
-
+$;
 create or replace function public.send_chat_message(
   p_session_token uuid,
   p_body text

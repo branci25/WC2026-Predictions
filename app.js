@@ -37,6 +37,7 @@ const SUPABASE_URL = "https://hhildstrkldmxcqpmjqo.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoaWxkc3Rya2xkbXhjcXBtanFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NjIzMjYsImV4cCI6MjA5NTQzODMyNn0.FEHi9ThOiKX0_ggvuezmCCpFJE353Vj-ghe2sUjdE1g";
 const SESSION_KEY = "ms2026-supabase-sessions-v1";
 const TIP_LOCK_MINUTES = 10;
+const TOURNAMENT_LOCK_AT = new Date(2026, 5, 11, 21, 0, 0, 0);
 const EXACT_SCORE_POINTS = 6;
 const MAX_JOKERS = 2;
 const YOUNG_PLAYER_CUTOFF = "2005-01-01";
@@ -385,6 +386,7 @@ const FANTASY_PLAYERS = [
 const supabaseEnabled = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 let onlineBusy = false;
 let authMode = "login";
+let lastTournamentLockState = false;
 
 function loadSessions() {
   try {
@@ -433,6 +435,11 @@ function friendlyProfileError(error) {
   if (message.includes("pin must be")) return "PIN mus\u00ed ma\u0165 4 a\u017e 8 \u010d\u00edslic.";
   if (message.includes("could not find the function") || message.includes("update_player_profile")) return "Najprv spusti SQL update_profile.sql v Supabase.";
   return "Profil sa nepodarilo upravi\u0165.";
+}
+function friendlyTournamentLockError(error, fallback) {
+  const message = String(error?.message || error || "").toLowerCase();
+  if (message.includes("tournament tips are locked")) return "Tipovanie poradia skup\u00edn a bonusov je po prvom v\u00fdkope uzavret\u00e9.";
+  return fallback;
 }
 function friendlyJokerError(error) {
   const message = String(error?.message || error || "").toLowerCase();
@@ -556,6 +563,7 @@ const FLAG_CODES = {
 };
 
 const state = loadState();
+lastTournamentLockState = isTournamentLocked();
 const els = {
   authLoggedOut: document.querySelector("#authLoggedOut"),
   authLoggedIn: document.querySelector("#authLoggedIn"),
@@ -966,6 +974,16 @@ function scoreGroupPicks(profileName = state.activeProfile) {
   return { total, byGroup };
 }
 
+function isTournamentLocked(now = Date.now()) {
+  return now >= TOURNAMENT_LOCK_AT.getTime();
+}
+
+function tournamentLockText(now = Date.now()) {
+  if (isTournamentLocked(now)) return "Tipovanie je uzavret\u00e9";
+  const date = TOURNAMENT_LOCK_AT.toLocaleDateString("sk-SK", { day: "2-digit", month: "2-digit" });
+  const time = TOURNAMENT_LOCK_AT.toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" });
+  return `Uz\u00e1vierka ${date} ${time}`;
+}
 function matchKickoffAt(match) {
   const [year, month, day] = match.date.split("-").map(Number);
   const [hour, minute = 0] = match.time.split(":").map(Number);
@@ -1303,8 +1321,9 @@ function renderGroupPicks() {
   }
   const picks = state.profiles[state.activeProfile].groupPicks;
   const groupScores = scoreGroupPicks().byGroup;
-  const canEdit = canEditActiveProfile();
+  const canEdit = canEditActiveProfile() && !isTournamentLocked();
   els.matches.innerHTML = `
+    <div class="tournament-lock-note ${isTournamentLocked() ? "locked" : ""}">${tournamentLockText()}</div>
     <div class="group-picks">
       ${getGroups().map((group) => `
         <section class="group-pick-card" data-pick-group="${group}">
@@ -1346,7 +1365,7 @@ function renderAwards() {
     els.matches.innerHTML = `<div class="empty-state">Vytvor alebo prihl\u00e1s hr\u00e1\u010da, aby si mohol tipova\u0165 bonusov\u00e9 ceny.</div>`;
     return;
   }
-  const canEdit = canEditActiveProfile();
+  const canEdit = canEditActiveProfile() && !isTournamentLocked();
   const tips = normalizeAwardTips(state.profiles[state.activeProfile].awardTips);
   const playersReady = worldCupPlayers.length > 0;
   els.matches.innerHTML = `
@@ -1358,6 +1377,7 @@ function renderAwards() {
         </div>
         <div class="awards-count"><strong>${Object.values(tips).filter(Boolean).length}</strong><span>z ${AWARD_CATEGORIES.length}</span></div>
       </div>
+      <div class="tournament-lock-note ${isTournamentLocked() ? "locked" : ""}">${tournamentLockText()}</div>
       ${!playersReady ? `<div class="empty-state">Hr\u00e1\u010di e\u0161te nie s\u00fa na\u010d\u00edtan\u00ed zo Supabase. Spusti <code>supabase/world_cup_players.sql</code> v SQL Editore.</div>` : ""}
       <div class="awards-grid">
         ${AWARD_CATEGORIES.map((award) => {
@@ -2066,6 +2086,11 @@ function bindEvents() {
     const awardsSave = event.target.closest("[data-save-awards]");
     if (awardsSave) {
       if (!state.activeProfile || !state.profiles[state.activeProfile]) return;
+      if (isTournamentLocked()) {
+        alert("Bonusov\u00e9 tipy s\u00fa po prvom v\u00fdkope uzavret\u00e9.");
+        renderAll();
+        return;
+      }
       if (!canEditActiveProfile()) {
         if (supabaseEnabled) alert("Bonusov\u00e9 tipy m\u00f4\u017ee\u0161 meni\u0165 iba vo vlastnom profile.");
         renderAll();
@@ -2084,7 +2109,7 @@ function bindEvents() {
         try {
           await saveOnlineAwardTips();
         } catch (error) {
-          alert(error.message || "Bonusov\u00e9 tipy sa nepodarilo ulo\u017ei\u0165.");
+          alert(friendlyTournamentLockError(error, "Bonusov\u00e9 tipy sa nepodarilo ulo\u017ei\u0165."));
           await loadOnlineState();
           return;
         }
@@ -2178,6 +2203,11 @@ function renderAll() {
 }
 
 async function moveTeamTo(group, movedTeam, beforeTeam) {
+  if (isTournamentLocked()) {
+    alert("Poradie skup\u00edn je po prvom v\u00fdkope uzavret\u00e9.");
+    renderAll();
+    return;
+  }
   if (!canEditActiveProfile()) {
     if (supabaseEnabled) alert("Meni\u0165 m\u00f4\u017ee\u0161 iba vlastn\u00e9 poradie.");
     return;
@@ -2192,11 +2222,16 @@ async function moveTeamTo(group, movedTeam, beforeTeam) {
   save();
   renderGroupPicks();
   if (supabaseEnabled) {
-    try { await saveOnlineGroupPick(group); } catch (error) { alert(error.message || "Poradie sa nepodarilo uložiť."); await loadOnlineState(); }
+    try { await saveOnlineGroupPick(group); } catch (error) { alert(friendlyTournamentLockError(error, "Poradie sa nepodarilo uložiť.")); await loadOnlineState(); }
   }
 }
 
 async function moveTeamStep(group, team, direction) {
+  if (isTournamentLocked()) {
+    alert("Poradie skup\u00edn je po prvom v\u00fdkope uzavret\u00e9.");
+    renderAll();
+    return;
+  }
   if (!canEditActiveProfile()) {
     if (supabaseEnabled) alert("Meni\u0165 m\u00f4\u017ee\u0161 iba vlastn\u00e9 poradie.");
     return;
@@ -2210,13 +2245,19 @@ async function moveTeamStep(group, team, direction) {
   save();
   renderGroupPicks();
   if (supabaseEnabled) {
-    try { await saveOnlineGroupPick(group); } catch (error) { alert(error.message || "Poradie sa nepodarilo uložiť."); await loadOnlineState(); }
+    try { await saveOnlineGroupPick(group); } catch (error) { alert(friendlyTournamentLockError(error, "Poradie sa nepodarilo uložiť.")); await loadOnlineState(); }
   }
 }
 
 function updateCountdown() {
-  const start = new Date("2026-06-11T21:00:00");
-  const diff = Math.max(0, start.getTime() - Date.now());
+  const now = Date.now();
+  const locked = isTournamentLocked(now);
+  if (locked !== lastTournamentLockState) {
+    lastTournamentLockState = locked;
+    if (state.activeView === "groups" || state.activeView === "awards") renderAll();
+  }
+  const start = TOURNAMENT_LOCK_AT;
+  const diff = Math.max(0, start.getTime() - now);
   const totalSeconds = Math.floor(diff / 1000);
   const days = Math.floor(totalSeconds / 86400);
   const hours = Math.floor((totalSeconds % 86400) / 3600);

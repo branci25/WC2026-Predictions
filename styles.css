@@ -921,6 +921,26 @@ h2 {
   gap: 10px;
 }
 
+.tournament-lock-note {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: start;
+  min-height: 32px;
+  border: 1px solid rgba(52, 64, 246, 0.16);
+  border-radius: 999px;
+  padding: 0 12px;
+  color: var(--primary);
+  background: rgba(52, 64, 246, 0.08);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.tournament-lock-note.locked {
+  color: #9f2f35;
+  background: #f8e8eb;
+  border-color: #f0ccd3;
+}
 .group-picks {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1952,7 +1972,27 @@ td:nth-child(n + 3) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .group-picks {
+  .tournament-lock-note {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: start;
+  min-height: 32px;
+  border: 1px solid rgba(52, 64, 246, 0.16);
+  border-radius: 999px;
+  padding: 0 12px;
+  color: var(--primary);
+  background: rgba(52, 64, 246, 0.08);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.tournament-lock-note.locked {
+  color: #9f2f35;
+  background: #f8e8eb;
+  border-color: #f0ccd3;
+}
+.group-picks {
     grid-template-columns: 1fr;
   }
 
