@@ -48,7 +48,7 @@ const AWARD_CATEGORIES = [
   { code: "bronze_ball", label: "Bronze Ball", hint: "Tret\u00ed najlep\u0161\u00ed hr\u00e1\u010d", filter: "all" },
   { code: "golden_glove", label: "Golden Glove", hint: "Najlep\u0161\u00ed brank\u00e1r", filter: "gk" },
   { code: "best_young_player", label: "Najlep\u0161\u00ed mlad\u00fd hr\u00e1\u010d", hint: "Naroden\u00fd 2005 alebo nesk\u00f4r", filter: "young" },
-  { code: "most_potm_awards", label: "Najviac hr\u00e1\u010dov z\u00e1pasu", hint: "Najviac POTM ocenen\u00ed", filter: "all" },
+  { code: "most_potm_awards", label: "Najviac ocenen\u00ed hr\u00e1\u010da z\u00e1pasu", hint: "Najviac POTM ocenen\u00ed", filter: "all" },
 ];
 let worldCupPlayers = [];
 const FANTASY_BUDGET = 100;
