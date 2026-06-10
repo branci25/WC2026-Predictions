@@ -1354,9 +1354,9 @@ function renderAwards() {
       <div class="awards-summary panel">
         <div>
           <h3>Bonusov\u00e9 tipy</h3>
-          <p>Tipy na individu\u00e1lne ceny turnaja. Meni\u0165 m\u00f4\u017ee\u0161 iba vlastn\u00fd profil.</p>
+          <p>Individu\u00e1lne ceny turnaja. Ka\u017ed\u00fd presn\u00fd tip = ${AWARD_POINTS} bodov.</p>
         </div>
-        <div class="awards-count"><strong>${Object.values(tips).filter(Boolean).length}/${AWARD_CATEGORIES.length}</strong><span>vyplnen\u00e9</span></div>
+        <div class="awards-count"><strong>${Object.values(tips).filter(Boolean).length}</strong><span>z ${AWARD_CATEGORIES.length}</span></div>
       </div>
       ${!playersReady ? `<div class="empty-state">Hr\u00e1\u010di e\u0161te nie s\u00fa na\u010d\u00edtan\u00ed zo Supabase. Spusti <code>supabase/world_cup_players.sql</code> v SQL Editore.</div>` : ""}
       <div class="awards-grid">
@@ -1366,12 +1366,15 @@ function renderAwards() {
           return `
             <article class="award-card panel">
               <div class="award-card-head">
-                <div><h3>${escapeHtml(award.label)}</h3><p>${escapeHtml(award.hint)}</p></div>
-                <span>${awardPlayerPool(award).length}</span>
+                <div>
+                  <span class="award-kicker">${escapeHtml(award.hint)}</span>
+                  <h3>${escapeHtml(award.label)}</h3>
+                </div>
+                <span class="award-points">${AWARD_POINTS} b</span>
               </div>
-              <input type="text" list="award-list-${award.code}" data-award-input="${award.code}" value="${escapeHtml(inputValue)}" placeholder="Za\u010dni p\u00edsa\u0165 meno hr\u00e1\u010da" ${canEdit && playersReady ? "" : "disabled"}>
+              <input type="text" list="award-list-${award.code}" data-award-input="${award.code}" value="${escapeHtml(inputValue)}" placeholder="Vyber hr\u00e1\u010da" ${canEdit && playersReady ? "" : "disabled"}>
               <datalist id="award-list-${award.code}">${playerDatalistOptions(award)}</datalist>
-              <small>${selected ? `${escapeHtml(selected.club || "")} &middot; ${escapeHtml(selected.team_name)}` : "Bez tipu"}</small>
+              <small>${selected ? `${escapeHtml(selected.club || "")} &middot; ${escapeHtml(selected.team_name)}` : `${awardPlayerPool(award).length} hr\u00e1\u010dov v zozname`}</small>
             </article>
           `;
         }).join("")}
