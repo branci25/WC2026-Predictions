@@ -474,6 +474,17 @@ async function supabaseRequest(path, options = {}) {
   return payload;
 }
 
+async function fetchWorldCupPlayers() {
+  const select = "id,team_name,team_code,squad_no,position,display_name,shirt_name,dob,club,height_cm";
+  const pageSize = 500;
+  const allPlayers = [];
+  for (let offset = 0; ; offset += pageSize) {
+    const batch = await supabaseRequest(`world_cup_players?select=${select}&order=team_name.asc&order=squad_no.asc&limit=${pageSize}&offset=${offset}`);
+    allPlayers.push(...batch);
+    if (batch.length < pageSize) break;
+  }
+  return allPlayers;
+}
 function supabaseRpc(name, body) {
   return supabaseRequest(`rpc/${name}`, {
     method: "POST",
@@ -1552,7 +1563,7 @@ async function loadOnlineState() {
     const fantasyPicksRequest = supabaseRequest("fantasy_picks?select=player_id,player_ids").catch(() => []);
     const awardTipsRequest = supabaseRequest("award_tips?select=player_id,award_code,picked_player_id").catch(() => []);
     const awardResultsRequest = supabaseRequest("award_results?select=award_code,picked_player_id").catch(() => []);
-    const worldCupPlayersRequest = supabaseRequest("world_cup_players?select=id,team_name,team_code,squad_no,position,display_name,shirt_name,dob,club,height_cm&order=team_name.asc&order=squad_no.asc&limit=2000").catch(() => []);
+    const worldCupPlayersRequest = fetchWorldCupPlayers().catch(() => []);
     const [players, remoteMatches, matchTips, groupTips, chatMessages, fantasyPicks, awardTips, awardResults, fetchedWorldCupPlayers] = await Promise.all([
       supabaseRequest("players?select=id,display_name,is_admin&order=created_at.asc"),
       supabaseRequest("matches?select=id,match_date,match_time,city,stadium,home_score,away_score&order=id.asc"),
