@@ -593,6 +593,8 @@ const els = {
   chatForm: document.querySelector("#chatForm"),
   chatInput: document.querySelector("#chatInput"),
   chatHint: document.querySelector("#chatHint"),
+  mobileFiltersBtn: document.querySelector("#mobileFiltersBtn"),
+  matchFiltersPanel: document.querySelector("#matchFiltersPanel"),
   groupFilter: document.querySelector("#groupFilter"),
   statusFilter: document.querySelector("#statusFilter"),
   searchInput: document.querySelector("#searchInput"),
@@ -1136,6 +1138,16 @@ function renderLeaderboard() {
   });
 }
 
+function closeMobileFilters() {
+  els.mobileFiltersBtn?.setAttribute("aria-expanded", "false");
+  els.matchFiltersPanel?.classList.remove("open");
+}
+
+function toggleMobileFilters() {
+  const expanded = els.mobileFiltersBtn?.getAttribute("aria-expanded") === "true";
+  els.mobileFiltersBtn?.setAttribute("aria-expanded", String(!expanded));
+  els.matchFiltersPanel?.classList.toggle("open", !expanded);
+}
 function renderViewTabs() {
   const isMatches = state.activeView === "matches";
   const isGroups = state.activeView === "groups";
@@ -1157,6 +1169,7 @@ function renderViewTabs() {
   });
   if (els.groupFilterLabel) els.groupFilterLabel.hidden = !isMatches;
   if (els.fantasyFilters) els.fantasyFilters.hidden = !isFantasy;
+  closeMobileFilters();
 }
 
 function renderMatches() {
@@ -1792,6 +1805,7 @@ function bindEvents() {
   els.openCreateAccountBtn?.addEventListener("click", () => openAuthModal("create"));
   els.openLoginBtn?.addEventListener("click", () => openAuthModal("login"));
   els.editProfileBtn?.addEventListener("click", openEditProfileModal);
+  els.mobileFiltersBtn?.addEventListener("click", toggleMobileFilters);
   els.closeAuthModalBtn?.addEventListener("click", closeAuthModal);
   els.authModal?.addEventListener("click", (event) => {
     if (event.target === els.authModal) closeAuthModal();

@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260610-3">
+    <link rel="stylesheet" href="styles.css?v=20260610-4">
   </head>
   <body>
     <section class="tournament-strip" aria-label="FIFA World Cup 2026">
@@ -159,29 +159,35 @@
             <button id="knockoutViewBtn" class="view-tab" type="button" role="tab" aria-selected="false">Play-off</button>
             <button id="awardsViewBtn" class="view-tab" type="button" role="tab" aria-selected="false">Bonusy</button>
           </div>
-          <div class="filter-group match-filter">
-            <label class="group-filter-label">
-              Skupina
-              <select id="groupFilter"></select>
+          <button id="mobileFiltersBtn" class="mobile-filter-toggle match-filter" type="button" aria-expanded="false" aria-controls="matchFiltersPanel">
+            <span>Filtre</span>
+            <span class="filter-chevron" aria-hidden="true">&#8964;</span>
+          </button>
+          <div id="matchFiltersPanel" class="match-filters-panel match-filter">
+            <div class="filter-group">
+              <label class="group-filter-label">
+                Skupina
+                <select id="groupFilter"></select>
+              </label>
+              <label>
+                Stav
+                <select id="statusFilter">
+                  <option value="all">Všetky</option>
+                  <option value="open">Na tipovanie</option>
+                  <option value="finished">Odohrané</option>
+                </select>
+              </label>
+            </div>
+            <label class="search-label">
+              Hľadať
+              <input id="searchInput" type="search" placeholder="Tím alebo mesto">
             </label>
-            <label>
-              Stav
-              <select id="statusFilter">
-                <option value="all">Všetky</option>
-                <option value="open">Na tipovanie</option>
-                <option value="finished">Odohrané</option>
-              </select>
+            <label class="admin-toggle">
+              <input id="adminMode" type="checkbox">
+              <span class="toggle-ui" aria-hidden="true"></span>
+              <span>Výsledky</span>
             </label>
           </div>
-          <label class="search-label match-filter">
-            Hľadať
-            <input id="searchInput" type="search" placeholder="Tím alebo mesto">
-          </label>
-          <label class="admin-toggle match-filter">
-            <input id="adminMode" type="checkbox">
-            <span class="toggle-ui" aria-hidden="true"></span>
-            <span>Výsledky</span>
-          </label>
         </div>
         <div id="matches" class="matches"></div>
       </section>
@@ -195,6 +201,6 @@
       </aside>
     </main>
 
-    <script src="app.js?v=20260610-3"></script>
+    <script src="app.js?v=20260610-4"></script>
   </body>
 </html>
