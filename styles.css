@@ -415,6 +415,21 @@ button:disabled {
   font-size: 13px;
 }
 
+.profile-danger-zone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.profile-danger-zone span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
 .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -1935,6 +1950,11 @@ td:nth-child(n + 3) {
     align-items: stretch;
     flex-direction: column;
   }
+  .profile-danger-zone {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
 
   .view-tabs {
     display: grid;

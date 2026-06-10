@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260610-2">
+    <link rel="stylesheet" href="styles.css?v=20260610-3">
   </head>
   <body>
     <section class="tournament-strip" aria-label="FIFA World Cup 2026">
@@ -44,7 +44,6 @@
           <span><strong class="auth-label">Prihl&aacute;sen&yacute;:</strong> <span id="loggedInName" class="auth-name"></span></span>
           <button id="editProfileBtn" class="secondary-button" type="button">Upravi&#357; profil</button>
           <button id="logoutBtn" class="secondary-button" type="button">Odhlásiť sa</button>
-          <button id="deleteAccountBtn" class="secondary-button danger-button" type="button">Zmazať účet</button>
         </div>
       </div>
     </header>
@@ -96,6 +95,10 @@
         <p id="editProfileError" class="form-error" role="alert"></p>
         <div class="modal-actions">
           <button id="editProfileSubmitBtn" type="submit">Ulo&#382;i&#357; zmeny</button>
+        </div>
+        <div class="profile-danger-zone">
+          <span>Zmazanie profilu odstr&aacute;ni aj tvoje tipy.</span>
+          <button id="deleteAccountBtn" class="secondary-button danger-button" type="button">Zmaza&#357; &uacute;&#269;et</button>
         </div>
       </form>
     </div>
@@ -192,6 +195,6 @@
       </aside>
     </main>
 
-    <script src="app.js?v=20260610-2"></script>
+    <script src="app.js?v=20260610-3"></script>
   </body>
 </html>
