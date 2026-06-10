@@ -417,6 +417,23 @@ function friendlyAuthError(error, mode = authMode) {
   return mode === "create" ? "\u00da\u010det sa nepodarilo vytvori\u0165." : "Prihl\u00e1senie sa nepodarilo.";
 }
 
+function clearEditProfileError() {
+  if (els.editProfileError) els.editProfileError.textContent = "";
+}
+
+function setEditProfileError(message) {
+  if (els.editProfileError) els.editProfileError.textContent = message || "Nie\u010do sa nepodarilo.";
+}
+
+function friendlyProfileError(error) {
+  const message = String(error?.message || error || "").toLowerCase();
+  if (message.includes("invalid old pin") || message.includes("invalid session")) return "Star\u00fd PIN nie je spr\u00e1vny.";
+  if (message.includes("player already exists") || message.includes("duplicate key") || message.includes("unique constraint") || message.includes("players_display_name_key") || message.includes("already exists")) return "\u00da\u010det s t\u00fdmto menom u\u017e existuje.";
+  if (message.includes("name is too short")) return "Meno mus\u00ed ma\u0165 aspo\u0148 2 znaky.";
+  if (message.includes("pin must be")) return "PIN mus\u00ed ma\u0165 4 a\u017e 8 \u010d\u00edslic.";
+  if (message.includes("could not find the function") || message.includes("update_player_profile")) return "Najprv spusti SQL update_profile.sql v Supabase.";
+  return "Profil sa nepodarilo upravi\u0165.";
+}
 function friendlyJokerError(error) {
   const message = String(error?.message || error || "").toLowerCase();
   if (message.includes("too many jokers")) return `M\u00f4\u017ee\u0161 pou\u017ei\u0165 najviac ${MAX_JOKERS} \u017eol\u00edky.`;
@@ -462,6 +479,7 @@ function setOnlineBusy(value) {
   document.body.classList.toggle("online-busy", value);
   if (els?.openLoginBtn) els.openLoginBtn.disabled = value || Object.keys(state.profiles).length === 0;
   if (els?.openCreateAccountBtn) els.openCreateAccountBtn.disabled = value;
+  if (els?.editProfileBtn) els.editProfileBtn.disabled = value || !activeSession();
   if (els?.logoutBtn) els.logoutBtn.disabled = value;
   if (els?.deleteAccountBtn) els.deleteAccountBtn.disabled = value || !activeSession();
   if (typeof renderChat === "function") renderChat();
@@ -544,6 +562,7 @@ const els = {
   loggedInName: document.querySelector("#loggedInName"),
   openCreateAccountBtn: document.querySelector("#openCreateAccountBtn"),
   openLoginBtn: document.querySelector("#openLoginBtn"),
+  editProfileBtn: document.querySelector("#editProfileBtn"),
   logoutBtn: document.querySelector("#logoutBtn"),
   deleteAccountBtn: document.querySelector("#deleteAccountBtn"),
   authModal: document.querySelector("#authModal"),
@@ -557,6 +576,14 @@ const els = {
   accountPinInput: document.querySelector("#accountPinInput"),
   authModalError: document.querySelector("#authModalError"),
   authSubmitBtn: document.querySelector("#authSubmitBtn"),
+  editProfileModal: document.querySelector("#editProfileModal"),
+  editProfileForm: document.querySelector("#editProfileForm"),
+  closeEditProfileBtn: document.querySelector("#closeEditProfileBtn"),
+  editProfileNameInput: document.querySelector("#editProfileNameInput"),
+  editOldPinInput: document.querySelector("#editOldPinInput"),
+  editNewPinInput: document.querySelector("#editNewPinInput"),
+  editProfileError: document.querySelector("#editProfileError"),
+  editProfileSubmitBtn: document.querySelector("#editProfileSubmitBtn"),
   matchDetailModal: document.querySelector("#matchDetailModal"),
   matchDetailTitle: document.querySelector("#matchDetailTitle"),
   matchDetailMeta: document.querySelector("#matchDetailMeta"),
@@ -1040,6 +1067,7 @@ function renderControls() {
   if (els.loggedInName) els.loggedInName.textContent = state.authProfile || "";
   if (els.openLoginBtn) els.openLoginBtn.disabled = onlineBusy || names.length === 0;
   if (els.openCreateAccountBtn) els.openCreateAccountBtn.disabled = onlineBusy;
+  if (els.editProfileBtn) els.editProfileBtn.disabled = onlineBusy || !loggedIn;
   if (els.logoutBtn) els.logoutBtn.disabled = onlineBusy;
   if (els.deleteAccountBtn) els.deleteAccountBtn.disabled = onlineBusy || !loggedIn;
   renderChat();
@@ -1681,6 +1709,43 @@ async function deleteOnlineAccount() {
   await loadOnlineState();
 }
 
+async function updateOnlineProfile(displayName, oldPin, newPin) {
+  const session = requireActiveSession();
+  if (!session) return;
+  const previousName = state.authProfile;
+  const rows = await supabaseRpc("update_player_profile", {
+    p_session_token: session.token,
+    p_display_name: displayName,
+    p_old_pin: oldPin,
+    p_new_pin: newPin || null,
+  });
+  const player = rows[0];
+  const nextName = player.display_name;
+  delete state.sessions[previousName];
+  state.sessions[nextName] = {
+    playerId: player.player_id,
+    token: player.session_token,
+    isAdmin: player.is_admin,
+  };
+  state.authProfile = nextName;
+  state.activeProfile = nextName;
+  saveSessions();
+  await loadOnlineState();
+}
+
+function openEditProfileModal() {
+  clearEditProfileError();
+  if (els.editProfileNameInput) els.editProfileNameInput.value = state.authProfile || "";
+  if (els.editOldPinInput) els.editOldPinInput.value = "";
+  if (els.editNewPinInput) els.editNewPinInput.value = "";
+  if (els.editProfileModal) els.editProfileModal.hidden = false;
+  setTimeout(() => els.editProfileNameInput?.focus(), 0);
+}
+
+function closeEditProfileModal() {
+  if (els.editProfileModal) els.editProfileModal.hidden = true;
+  clearEditProfileError();
+}
 function openAuthModal(mode) {
   authMode = mode;
   clearAuthError();
@@ -1726,9 +1791,14 @@ async function saveOnlineResult(matchId) {
 function bindEvents() {
   els.openCreateAccountBtn?.addEventListener("click", () => openAuthModal("create"));
   els.openLoginBtn?.addEventListener("click", () => openAuthModal("login"));
+  els.editProfileBtn?.addEventListener("click", openEditProfileModal);
   els.closeAuthModalBtn?.addEventListener("click", closeAuthModal);
   els.authModal?.addEventListener("click", (event) => {
     if (event.target === els.authModal) closeAuthModal();
+  });
+  els.closeEditProfileBtn?.addEventListener("click", closeEditProfileModal);
+  els.editProfileModal?.addEventListener("click", (event) => {
+    if (event.target === els.editProfileModal) closeEditProfileModal();
   });
 
   els.matchDetailModal?.addEventListener("click", (event) => {
@@ -1769,6 +1839,34 @@ function bindEvents() {
     }
   });
 
+  els.editProfileForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    clearEditProfileError();
+    const name = els.editProfileNameInput?.value.trim() || "";
+    const oldPin = els.editOldPinInput?.value.trim() || "";
+    const newPin = els.editNewPinInput?.value.trim() || "";
+    if (name.length < 2) {
+      setEditProfileError("Meno mus\u00ed ma\u0165 aspo\u0148 2 znaky.");
+      return;
+    }
+    if (!/^\d{4,8}$/.test(oldPin)) {
+      setEditProfileError("Star\u00fd PIN mus\u00ed ma\u0165 4 a\u017e 8 \u010d\u00edslic.");
+      return;
+    }
+    if (newPin && !/^\d{4,8}$/.test(newPin)) {
+      setEditProfileError("Nov\u00fd PIN mus\u00ed ma\u0165 4 a\u017e 8 \u010d\u00edslic.");
+      return;
+    }
+    try {
+      setOnlineBusy(true);
+      await updateOnlineProfile(name, oldPin, newPin);
+      closeEditProfileModal();
+    } catch (error) {
+      setEditProfileError(friendlyProfileError(error));
+    } finally {
+      setOnlineBusy(false);
+    }
+  });
   els.chatForm?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const body = els.chatInput?.value.trim() || "";

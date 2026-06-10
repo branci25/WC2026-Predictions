@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260610-1">
+    <link rel="stylesheet" href="styles.css?v=20260610-2">
   </head>
   <body>
     <section class="tournament-strip" aria-label="FIFA World Cup 2026">
@@ -42,6 +42,7 @@
         </div>
         <div id="authLoggedIn" class="auth-session" hidden>
           <span><strong class="auth-label">Prihl&aacute;sen&yacute;:</strong> <span id="loggedInName" class="auth-name"></span></span>
+          <button id="editProfileBtn" class="secondary-button" type="button">Upravi&#357; profil</button>
           <button id="logoutBtn" class="secondary-button" type="button">Odhlásiť sa</button>
           <button id="deleteAccountBtn" class="secondary-button danger-button" type="button">Zmazať účet</button>
         </div>
@@ -73,6 +74,31 @@
       </form>
     </div>
 
+
+    <div id="editProfileModal" class="modal-backdrop" hidden>
+      <form id="editProfileForm" class="auth-modal" autocomplete="off">
+        <div class="modal-head">
+          <h2>Upravi&#357; profil</h2>
+          <button id="closeEditProfileBtn" class="icon-button" type="button" aria-label="Zavrie&#357;">&times;</button>
+        </div>
+        <label>
+          Nov&eacute; meno
+          <input id="editProfileNameInput" type="text" maxlength="24" placeholder="Tvoje meno">
+        </label>
+        <label>
+          Star&yacute; PIN
+          <input id="editOldPinInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="Aktualny PIN">
+        </label>
+        <label>
+          Nov&yacute; PIN <span class="optional-note">volite&#318;n&eacute;</span>
+          <input id="editNewPinInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="Nechaj prazdne bez zmeny">
+        </label>
+        <p id="editProfileError" class="form-error" role="alert"></p>
+        <div class="modal-actions">
+          <button id="editProfileSubmitBtn" type="submit">Ulo&#382;i&#357; zmeny</button>
+        </div>
+      </form>
+    </div>
     <div id="matchDetailModal" class="modal-backdrop" hidden>
       <section class="match-detail-modal" role="dialog" aria-modal="true" aria-labelledby="matchDetailTitle">
         <div class="modal-head">
@@ -166,6 +192,6 @@
       </aside>
     </main>
 
-    <script src="app.js?v=20260610-1"></script>
+    <script src="app.js?v=20260610-2"></script>
   </body>
 </html>

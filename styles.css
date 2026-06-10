@@ -432,6 +432,12 @@ button:disabled {
   font-weight: 800;
 }
 
+.optional-note {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: none;
+}
 .pin-input {
   width: 92px;
 }
