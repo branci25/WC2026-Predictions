@@ -951,6 +951,13 @@ function isTipLocked(match, now = Date.now()) {
   return now >= matchLockAt(match).getTime();
 }
 
+function canRevealMatchTip(profileName, match) {
+  if (!profileName || !match) return false;
+  if (!supabaseEnabled) return true;
+  if (state.authProfile && profileName === state.authProfile) return true;
+  return isFinished(match);
+}
+
 function formatLockDuration(ms) {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
   const days = Math.floor(totalSeconds / 86400);
@@ -975,6 +982,11 @@ function updateMatchLocks() {
   document.querySelectorAll("[data-lock-match]").forEach((el) => {
     const match = byId(el.dataset.lockMatch);
     if (!match) return;
+    if (el.dataset.privateTip === "true") {
+      el.textContent = "Tip skryt\u00fd do v\u00fdsledku";
+      el.classList.remove("locked");
+      return;
+    }
     el.textContent = lockText(match, now);
     el.classList.toggle("locked", isTipLocked(match, now));
   });
@@ -1145,13 +1157,16 @@ function renderMatches() {
 
   els.matches.innerHTML = filtered.map((match) => {
     const result = state.results[match.id] || { home: null, away: null };
-    const tip = activeTips[match.id] || { home: null, away: null };
-    const score = scoreTip(match);
+    const rawTip = activeTips[match.id] || { home: null, away: null };
     const finished = isFinished(match);
+    const canRevealTip = canRevealMatchTip(state.activeProfile, match);
+    const tip = canRevealTip ? rawTip : { home: null, away: null };
+    const score = canRevealTip ? scoreTip(match) : null;
     const tipLocked = isTipLocked(match, now);
     const canEditTip = canEdit && !tipLocked;
-    const joker = isJoker(state.activeProfile, match.id);
-    const jokerLabel = joker ? "\u017dol\u00edk x2" : `\u017dol\u00edk ${jokerCount()}/${MAX_JOKERS}`;
+    const rawJoker = isJoker(state.activeProfile, match.id);
+    const joker = canRevealTip && rawJoker;
+    const jokerLabel = rawJoker ? "\u017dol\u00edk x2" : `\u017dol\u00edk ${jokerCount()}/${MAX_JOKERS}`;
     const metaLabel = match.round || `Skupina ${match.group}`;
     return `
       <article class="match-card ${finished ? "finished" : ""} ${tipLocked ? "tip-locked" : ""}" data-match-detail="${match.id}" tabindex="0">
@@ -1167,8 +1182,8 @@ function renderMatches() {
             <input aria-label="${match.home} tip" type="number" min="0" inputmode="numeric" data-tip-home="${match.id}" value="${tip.home ?? ""}" ${canEditTip ? "" : "disabled"}>
             <input aria-label="${match.away} tip" type="number" min="0" inputmode="numeric" data-tip-away="${match.id}" value="${tip.away ?? ""}" ${canEditTip ? "" : "disabled"}>
           </div>
-          <div class="lock-countdown ${tipLocked ? "locked" : ""}" data-lock-match="${match.id}">${lockText(match, now)}</div>
-          <button class="joker-button ${joker ? "active" : ""}" type="button" data-joker="${match.id}" ${canEditTip ? "" : "disabled"}>${jokerLabel}</button>
+          <div class="lock-countdown ${tipLocked ? "locked" : ""}" data-lock-match="${match.id}" ${canRevealTip ? "" : "data-private-tip='true'"}>${canRevealTip ? lockText(match, now) : "Tip skryt\u00fd do v\u00fdsledku"}</div>
+          <button class="joker-button ${joker ? "active" : ""} ${!canRevealTip ? "hidden-tip" : ""}" type="button" data-joker="${match.id}" ${canEditTip ? "" : "disabled"}>${canRevealTip ? jokerLabel : "\u017dol\u00edk skryt\u00fd"}</button>
         </div>
         <div class="team away">${flagImg(match.away)}<span class="team-name">${match.away}</span></div>
         <div class="match-actions">
@@ -1209,7 +1224,7 @@ function openMatchDetail(matchId) {
       const hasTip = tip?.home !== null && tip?.away !== null && tip?.home !== undefined && tip?.away !== undefined;
       const ownProfile = state.authProfile || state.activeProfile;
       const isOwn = name === ownProfile;
-      const canReveal = locked || isOwn;
+      const canReveal = canRevealMatchTip(name, match);
       const score = canReveal ? scoreTip(match, name) : null;
       const joker = canReveal && isJoker(name, match.id);
       const tipText = canReveal ? formatTipValue(tip) : "skryt\u00e9";

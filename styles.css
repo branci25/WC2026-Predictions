@@ -1574,6 +1574,12 @@ h2 {
   border-color: transparent;
 }
 
+.joker-button.hidden-tip {
+  background: #edf3ff;
+  border-color: #d5dff2;
+  color: #66738c;
+}
+
 .joker-button:disabled {
   opacity: 0.48;
   cursor: not-allowed;
