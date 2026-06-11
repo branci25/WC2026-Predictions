@@ -956,6 +956,29 @@ h2 {
   backdrop-filter: blur(16px);
 }
 
+
+.private-pick {
+  background: rgba(248, 250, 255, 0.9);
+}
+
+.private-tip-box {
+  display: grid;
+  min-height: 92px;
+  place-items: center;
+  border: 1px dashed rgba(52, 64, 246, 0.24);
+  border-radius: 8px;
+  padding: 18px;
+  color: #657087;
+  background: rgba(52, 64, 246, 0.04);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.award-card.private-pick input {
+  color: #657087;
+  background: rgba(238, 243, 255, 0.82);
+}
 .fantasy-filters[hidden] {
   display: none;
 }

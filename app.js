@@ -1016,6 +1016,19 @@ function canRevealMatchTip(profileName, match) {
   return isFinished(match);
 }
 
+function canRevealGroupPick(profileName, groupScore) {
+  if (!profileName) return false;
+  if (!supabaseEnabled) return true;
+  if (state.authProfile && profileName === state.authProfile) return true;
+  return Boolean(groupScore?.complete);
+}
+
+function canRevealAwardTip(profileName, awardCode) {
+  if (!profileName || !awardCode) return false;
+  if (!supabaseEnabled) return true;
+  if (state.authProfile && profileName === state.authProfile) return true;
+  return Boolean(normalizeAwardResults(state.awardResults || {})[awardCode]);
+}
 function formatLockDuration(ms) {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
   const days = Math.floor(totalSeconds / 86400);
@@ -1327,7 +1340,7 @@ function openMatchDetail(matchId) {
 
 function renderGroupPicks() {
   if (!state.activeProfile || !state.profiles[state.activeProfile]) {
-    els.matches.innerHTML = `<div class="empty-state">Vytvor alebo prihlás hráča, aby sa dalo tipovať poradie skupín.</div>`;
+    els.matches.innerHTML = `<div class="empty-state">Vytvor alebo prihl\u00e1s hr\u00e1\u010da, aby sa dalo tipova\u0165 poradie skup\u00edn.</div>`;
     return;
   }
   const picks = state.profiles[state.activeProfile].groupPicks;
@@ -1336,29 +1349,38 @@ function renderGroupPicks() {
   els.matches.innerHTML = `
     <div class="tournament-lock-note ${isTournamentLocked() ? "locked" : ""}">${tournamentLockText()}</div>
     <div class="group-picks">
-      ${getGroups().map((group) => `
-        <section class="group-pick-card" data-pick-group="${group}">
-          <div class="group-pick-head">
-            <h3>Skupina ${group}</h3>
-            <span class="pill">${groupScores[group]?.complete ? `${groupScores[group].points} b` : "čaká na výsledky"}</span>
-          </div>
-          <div class="pick-list">
-            ${picks[group].map((team, index) => `
-              <div class="pick-team ${canEdit ? "" : "readonly"}" draggable="${canEdit ? "true" : "false"}" data-team="${team}">
-                <span class="pick-rank">${index + 1}</span>
-                ${flagImg(team)}
-                <span class="pick-name">${team}</span>
-                <span class="pick-score">${groupScores[group]?.complete ? scoreGroupTeam(groupScores[group], team, index) : ""}</span>
-                <span class="drag-handle" aria-hidden="true">::</span>
-                <div class="pick-buttons">
-                  <button type="button" data-move="up" ${canEdit ? "" : "disabled"} aria-label="Posunúť ${team} vyššie">↑</button>
-                  <button type="button" data-move="down" ${canEdit ? "" : "disabled"} aria-label="Posunúť ${team} nižšie">↓</button>
-                </div>
+      ${getGroups().map((group) => {
+        const groupScore = groupScores[group];
+        const canReveal = canRevealGroupPick(state.activeProfile, groupScore);
+        const pillText = canReveal
+          ? (groupScore?.complete ? `${groupScore.points} b` : "\u010dak\u00e1 na v\u00fdsledky")
+          : "skryt\u00e9 do vyhodnotenia";
+        return `
+          <section class="group-pick-card ${canReveal ? "" : "private-pick"}" data-pick-group="${group}">
+            <div class="group-pick-head">
+              <h3>Skupina ${group}</h3>
+              <span class="pill">${pillText}</span>
+            </div>
+            ${canReveal ? `
+              <div class="pick-list">
+                ${picks[group].map((team, index) => `
+                  <div class="pick-team ${canEdit ? "" : "readonly"}" draggable="${canEdit ? "true" : "false"}" data-team="${team}">
+                    <span class="pick-rank">${index + 1}</span>
+                    ${flagImg(team)}
+                    <span class="pick-name">${team}</span>
+                    <span class="pick-score">${groupScore?.complete ? scoreGroupTeam(groupScore, team, index) : ""}</span>
+                    <span class="drag-handle" aria-hidden="true">::</span>
+                    <div class="pick-buttons">
+                      <button type="button" data-move="up" ${canEdit ? "" : "disabled"} aria-label="Posun\u00fa\u0165 ${team} vy\u0161\u0161ie">\u2191</button>
+                      <button type="button" data-move="down" ${canEdit ? "" : "disabled"} aria-label="Posun\u00fa\u0165 ${team} ni\u017e\u0161ie">\u2193</button>
+                    </div>
+                  </div>
+                `).join("")}
               </div>
-            `).join("")}
-          </div>
-        </section>
-      `).join("")}
+            ` : `<div class="private-tip-box">Tip poradia tejto skupiny je skryt\u00fd do vyhodnotenia.</div>`}
+          </section>
+        `;
+      }).join("")}
     </div>
   `;
 }
@@ -1378,7 +1400,9 @@ function renderAwards() {
   }
   const canEdit = canEditActiveProfile() && !isTournamentLocked();
   const tips = normalizeAwardTips(state.profiles[state.activeProfile].awardTips);
+  const results = normalizeAwardResults(state.awardResults || {});
   const playersReady = worldCupPlayers.length > 0;
+  const visibleTipCount = AWARD_CATEGORIES.filter((award) => canRevealAwardTip(state.activeProfile, award.code) && tips[award.code]).length;
   els.matches.innerHTML = `
     <section class="awards-board">
       <div class="awards-summary panel">
@@ -1386,16 +1410,21 @@ function renderAwards() {
           <h3>Bonusov\u00e9 tipy</h3>
           <p>Individu\u00e1lne ceny turnaja. Ka\u017ed\u00fd presn\u00fd tip = ${AWARD_POINTS} bodov.</p>
         </div>
-        <div class="awards-count"><strong>${Object.values(tips).filter(Boolean).length}</strong><span>z ${AWARD_CATEGORIES.length}</span></div>
+        <div class="awards-count"><strong>${visibleTipCount}</strong><span>z ${AWARD_CATEGORIES.length}</span></div>
       </div>
       <div class="tournament-lock-note ${isTournamentLocked() ? "locked" : ""}">${tournamentLockText()}</div>
       ${!playersReady ? `<div class="empty-state">Hr\u00e1\u010di e\u0161te nie s\u00fa na\u010d\u00edtan\u00ed zo Supabase. Spusti <code>supabase/world_cup_players.sql</code> v SQL Editore.</div>` : ""}
       <div class="awards-grid">
         ${AWARD_CATEGORIES.map((award) => {
-          const selected = playerById(tips[award.code]);
+          const canReveal = canRevealAwardTip(state.activeProfile, award.code);
+          const selected = canReveal ? playerById(tips[award.code]) : null;
           const inputValue = selected ? playerOptionLabel(selected) : "";
+          const placeholder = canReveal ? "Vyber hr\u00e1\u010da" : "Tip skryt\u00fd do vyhodnotenia";
+          const detailText = canReveal
+            ? (selected ? `${escapeHtml(selected.club || "")} &middot; ${escapeHtml(selected.team_name)}` : `${awardPlayerPool(award).length} hr\u00e1\u010dov v zozname`)
+            : (results[award.code] ? "Vyhodnoten\u00e9" : "Cudz\u00ed tip sa zobraz\u00ed po vyhodnoten\u00ed ceny");
           return `
-            <article class="award-card panel">
+            <article class="award-card panel ${canReveal ? "" : "private-pick"}">
               <div class="award-card-head">
                 <div>
                   <span class="award-kicker">${escapeHtml(award.hint)}</span>
@@ -1403,9 +1432,9 @@ function renderAwards() {
                 </div>
                 <span class="award-points">${AWARD_POINTS} b</span>
               </div>
-              <input type="text" list="award-list-${award.code}" data-award-input="${award.code}" value="${escapeHtml(inputValue)}" placeholder="Vyber hr\u00e1\u010da" ${canEdit && playersReady ? "" : "disabled"}>
-              <datalist id="award-list-${award.code}">${playerDatalistOptions(award)}</datalist>
-              <small>${selected ? `${escapeHtml(selected.club || "")} &middot; ${escapeHtml(selected.team_name)}` : `${awardPlayerPool(award).length} hr\u00e1\u010dov v zozname`}</small>
+              <input type="text" list="award-list-${award.code}" data-award-input="${award.code}" value="${escapeHtml(inputValue)}" placeholder="${placeholder}" ${canEdit && playersReady ? "" : "disabled"}>
+              <datalist id="award-list-${award.code}">${canReveal ? playerDatalistOptions(award) : ""}</datalist>
+              <small>${detailText}</small>
             </article>
           `;
         }).join("")}
