@@ -1036,7 +1036,7 @@ function canRevealMatchTip(profileName, match) {
   if (!profileName || !match) return false;
   if (!supabaseEnabled) return true;
   if (state.authProfile && profileName === state.authProfile) return true;
-  return isTipLocked(match);
+  return isFinished(match);
 }
 
 function canRevealGroupPick(profileName, groupScore) {
