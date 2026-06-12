@@ -38,6 +38,8 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const SESSION_KEY = "ms2026-supabase-sessions-v1";
 const TIP_LOCK_MINUTES = 10;
 const TOURNAMENT_LOCK_AT = new Date(2026, 5, 11, 21, 0, 0, 0);
+const LATE_UNLOCK_PROFILE = "cigansky sen";
+const LATE_UNLOCK_BLOCKED_GROUPS = new Set(["A"]);
 const EXACT_SCORE_POINTS = 6;
 const MAX_JOKERS = 2;
 const YOUNG_PLAYER_CUTOFF = "2005-01-01";
@@ -995,6 +997,30 @@ function tournamentLockText(now = Date.now()) {
   const time = TOURNAMENT_LOCK_AT.toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" });
   return `Uz\u00e1vierka ${date} ${time}`;
 }
+
+function hasLateTournamentUnlock(profileName = state.activeProfile) {
+  return String(profileName || "").trim().toLowerCase() === LATE_UNLOCK_PROFILE;
+}
+
+function canEditTournamentGroupPick(group, profileName = state.activeProfile) {
+  if (!isTournamentLocked()) return true;
+  return hasLateTournamentUnlock(profileName) && !LATE_UNLOCK_BLOCKED_GROUPS.has(String(group || "").toUpperCase());
+}
+
+function canEditTournamentAwards(profileName = state.activeProfile) {
+  if (!isTournamentLocked()) return true;
+  return hasLateTournamentUnlock(profileName);
+}
+
+function tournamentGroupLockText() {
+  if (hasLateTournamentUnlock() && isTournamentLocked()) return "V\u00fdnimka: skupina A je zamknut\u00e1, ostatn\u00e9 skupiny m\u00f4\u017ee\u0161 e\u0161te upravi\u0165";
+  return tournamentLockText();
+}
+
+function tournamentAwardsLockText() {
+  if (hasLateTournamentUnlock() && isTournamentLocked()) return "V\u00fdnimka: bonusov\u00e9 tipy m\u00f4\u017ee\u0161 e\u0161te upravi\u0165";
+  return tournamentLockText();
+}
 function matchKickoffAt(match) {
   const [year, month, day] = match.date.split("-").map(Number);
   const [hour, minute = 0] = match.time.split(":").map(Number);
@@ -1345,13 +1371,14 @@ function renderGroupPicks() {
   }
   const picks = state.profiles[state.activeProfile].groupPicks;
   const groupScores = scoreGroupPicks().byGroup;
-  const canEdit = canEditActiveProfile() && !isTournamentLocked();
+  const canEdit = canEditActiveProfile();
   els.matches.innerHTML = `
-    <div class="tournament-lock-note ${isTournamentLocked() ? "locked" : ""}">${tournamentLockText()}</div>
+    <div class="tournament-lock-note ${isTournamentLocked() && !hasLateTournamentUnlock() ? "locked" : ""}">${tournamentGroupLockText()}</div>
     <div class="group-picks">
       ${getGroups().map((group) => {
         const groupScore = groupScores[group];
         const canReveal = canRevealGroupPick(state.activeProfile, groupScore);
+        const canEditGroup = canEdit && canEditTournamentGroupPick(group);
         const pillText = canReveal
           ? (groupScore?.complete ? `${groupScore.points} b` : "\u010dak\u00e1 na v\u00fdsledky")
           : "skryt\u00e9 do vyhodnotenia";
@@ -1364,15 +1391,15 @@ function renderGroupPicks() {
             ${canReveal ? `
               <div class="pick-list">
                 ${picks[group].map((team, index) => `
-                  <div class="pick-team ${canEdit ? "" : "readonly"}" draggable="${canEdit ? "true" : "false"}" data-team="${team}">
+                  <div class="pick-team ${canEditGroup ? "" : "readonly"}" draggable="${canEditGroup ? "true" : "false"}" data-team="${team}">
                     <span class="pick-rank">${index + 1}</span>
                     ${flagImg(team)}
                     <span class="pick-name">${team}</span>
                     <span class="pick-score">${groupScore?.complete ? scoreGroupTeam(groupScore, team, index) : ""}</span>
                     <span class="drag-handle" aria-hidden="true">::</span>
                     <div class="pick-buttons">
-                      <button type="button" data-move="up" ${canEdit ? "" : "disabled"} aria-label="Posun\u00fa\u0165 ${team} vy\u0161\u0161ie">\u2191</button>
-                      <button type="button" data-move="down" ${canEdit ? "" : "disabled"} aria-label="Posun\u00fa\u0165 ${team} ni\u017e\u0161ie">\u2193</button>
+                      <button type="button" data-move="up" ${canEditGroup ? "" : "disabled"} aria-label="Posun\u00fa\u0165 ${team} vy\u0161\u0161ie">\u2191</button>
+                      <button type="button" data-move="down" ${canEditGroup ? "" : "disabled"} aria-label="Posun\u00fa\u0165 ${team} ni\u017e\u0161ie">\u2193</button>
                     </div>
                   </div>
                 `).join("")}
@@ -1398,7 +1425,7 @@ function renderAwards() {
     els.matches.innerHTML = `<div class="empty-state">Vytvor alebo prihl\u00e1s hr\u00e1\u010da, aby si mohol tipova\u0165 bonusov\u00e9 ceny.</div>`;
     return;
   }
-  const canEdit = canEditActiveProfile() && !isTournamentLocked();
+  const canEdit = canEditActiveProfile() && canEditTournamentAwards();
   const tips = normalizeAwardTips(state.profiles[state.activeProfile].awardTips);
   const results = normalizeAwardResults(state.awardResults || {});
   const playersReady = worldCupPlayers.length > 0;
@@ -1412,7 +1439,7 @@ function renderAwards() {
         </div>
         <div class="awards-count"><strong>${visibleTipCount}</strong><span>z ${AWARD_CATEGORIES.length}</span></div>
       </div>
-      <div class="tournament-lock-note ${isTournamentLocked() ? "locked" : ""}">${tournamentLockText()}</div>
+      <div class="tournament-lock-note ${isTournamentLocked() && !hasLateTournamentUnlock() ? "locked" : ""}">${tournamentAwardsLockText()}</div>
       ${!playersReady ? `<div class="empty-state">Hr\u00e1\u010di e\u0161te nie s\u00fa na\u010d\u00edtan\u00ed zo Supabase. Spusti <code>supabase/world_cup_players.sql</code> v SQL Editore.</div>` : ""}
       <div class="awards-grid">
         ${AWARD_CATEGORIES.map((award) => {
@@ -2126,7 +2153,7 @@ function bindEvents() {
     const awardsSave = event.target.closest("[data-save-awards]");
     if (awardsSave) {
       if (!state.activeProfile || !state.profiles[state.activeProfile]) return;
-      if (isTournamentLocked()) {
+      if (!canEditTournamentAwards()) {
         alert("Bonusov\u00e9 tipy s\u00fa po prvom v\u00fdkope uzavret\u00e9.");
         renderAll();
         return;
@@ -2243,8 +2270,8 @@ function renderAll() {
 }
 
 async function moveTeamTo(group, movedTeam, beforeTeam) {
-  if (isTournamentLocked()) {
-    alert("Poradie skup\u00edn je po prvom v\u00fdkope uzavret\u00e9.");
+  if (!canEditTournamentGroupPick(group)) {
+    alert("Poradie tejto skupiny je uzavret\u00e9.");
     renderAll();
     return;
   }
@@ -2267,8 +2294,8 @@ async function moveTeamTo(group, movedTeam, beforeTeam) {
 }
 
 async function moveTeamStep(group, team, direction) {
-  if (isTournamentLocked()) {
-    alert("Poradie skup\u00edn je po prvom v\u00fdkope uzavret\u00e9.");
+  if (!canEditTournamentGroupPick(group)) {
+    alert("Poradie tejto skupiny je uzavret\u00e9.");
     renderAll();
     return;
   }
