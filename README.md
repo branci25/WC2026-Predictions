@@ -38,7 +38,7 @@ Vo Vercel Project Settings -> Environment Variables nastav:
 - `CRON_SECRET` - nahodny tajny text aspon 16 znakov.
 - `RESULTS_SOURCE_URL` - JSON endpoint so zdrojom vysledkov, ked budeme mat stabilny zdroj.
 
-Vercel cron je v `vercel.json` nastaveny kazdych 15 minut na `/api/sync-results`, aby sa vysledky doplnali co najskor po dohrati zapasu. Rovnaka funkcia sa da spustit aj rucne alebo externym cron nastrojom cez header `Authorization: Bearer <CRON_SECRET>`.
+Vercel cron je v `vercel.json` nastaveny denne na `/api/sync-results`, aby presiel aj na Hobby plane. Ak chceme castejsie doplnanie vysledkov, rovnaku funkciu treba volat externym cron nastrojom cez header `Authorization: Bearer <CRON_SECRET>`.
 
 Manualny test po deployi:
 
