@@ -38,8 +38,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const SESSION_KEY = "ms2026-supabase-sessions-v1";
 const TIP_LOCK_MINUTES = 10;
 const TOURNAMENT_LOCK_AT = new Date(2026, 5, 11, 21, 0, 0, 0);
-const LATE_UNLOCK_PROFILE = "cigansky sen";
-const LATE_UNLOCK_BLOCKED_GROUPS = new Set(["A"]);
+const LATE_AWARD_UNLOCK_PROFILES = new Set(["limon \\u010fzamal", "limon d\\u017eamal"]);
 const EXACT_SCORE_POINTS = 6;
 const MAX_JOKERS = 2;
 const YOUNG_PLAYER_CUTOFF = "2005-01-01";
@@ -998,27 +997,25 @@ function tournamentLockText(now = Date.now()) {
   return `Uz\u00e1vierka ${date} ${time}`;
 }
 
-function hasLateTournamentUnlock(profileName = state.activeProfile) {
-  return String(profileName || "").trim().toLowerCase() === LATE_UNLOCK_PROFILE;
+function hasLateAwardUnlock(profileName = state.activeProfile) {
+  return LATE_AWARD_UNLOCK_PROFILES.has(String(profileName || "").trim().toLowerCase());
 }
 
 function canEditTournamentGroupPick(group, profileName = state.activeProfile) {
-  if (!isTournamentLocked()) return true;
-  return hasLateTournamentUnlock(profileName) && !LATE_UNLOCK_BLOCKED_GROUPS.has(String(group || "").toUpperCase());
+  return !isTournamentLocked();
 }
 
 function canEditTournamentAwards(profileName = state.activeProfile) {
   if (!isTournamentLocked()) return true;
-  return hasLateTournamentUnlock(profileName);
+  return hasLateAwardUnlock(profileName);
 }
 
 function tournamentGroupLockText() {
-  if (hasLateTournamentUnlock() && isTournamentLocked()) return "V\u00fdnimka: skupina A je zamknut\u00e1, ostatn\u00e9 skupiny m\u00f4\u017ee\u0161 e\u0161te upravi\u0165";
   return tournamentLockText();
 }
 
 function tournamentAwardsLockText() {
-  if (hasLateTournamentUnlock() && isTournamentLocked()) return "V\u00fdnimka: bonusov\u00e9 tipy m\u00f4\u017ee\u0161 e\u0161te upravi\u0165";
+  if (hasLateAwardUnlock() && isTournamentLocked()) return "V\u00fdnimka: bonusov\u00e9 tipy m\u00f4\u017ee\u0161 e\u0161te upravi\u0165";
   return tournamentLockText();
 }
 function matchKickoffAt(match) {
@@ -1373,7 +1370,7 @@ function renderGroupPicks() {
   const groupScores = scoreGroupPicks().byGroup;
   const canEdit = canEditActiveProfile();
   els.matches.innerHTML = `
-    <div class="tournament-lock-note ${isTournamentLocked() && !hasLateTournamentUnlock() ? "locked" : ""}">${tournamentGroupLockText()}</div>
+    <div class="tournament-lock-note ${isTournamentLocked() ? "locked" : ""}">${tournamentGroupLockText()}</div>
     <div class="group-picks">
       ${getGroups().map((group) => {
         const groupScore = groupScores[group];
@@ -1439,7 +1436,7 @@ function renderAwards() {
         </div>
         <div class="awards-count"><strong>${visibleTipCount}</strong><span>z ${AWARD_CATEGORIES.length}</span></div>
       </div>
-      <div class="tournament-lock-note ${isTournamentLocked() && !hasLateTournamentUnlock() ? "locked" : ""}">${tournamentAwardsLockText()}</div>
+      <div class="tournament-lock-note ${isTournamentLocked() && !hasLateAwardUnlock() ? "locked" : ""}">${tournamentAwardsLockText()}</div>
       ${!playersReady ? `<div class="empty-state">Hr\u00e1\u010di e\u0161te nie s\u00fa na\u010d\u00edtan\u00ed zo Supabase. Spusti <code>supabase/world_cup_players.sql</code> v SQL Editore.</div>` : ""}
       <div class="awards-grid">
         ${AWARD_CATEGORIES.map((award) => {

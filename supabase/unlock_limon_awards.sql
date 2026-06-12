@@ -1,8 +1,8 @@
--- Temporary exception for late tournament-wide tips.
--- Allows only profile "cigansky sen" to edit bonus tips and group-order tips for groups B-L.
--- Group A remains locked.
+-- Temporary exception for late bonus tips.
+-- Closes the previous "cigansky sen" exception.
+-- Allows only profile "Limon Ďzamal" to edit bonus award tips.
+-- Group-order tips remain locked for everyone.
 -- Run this in Supabase SQL Editor.
-
 create or replace function public.set_group_order_tip(
   p_session_token uuid,
   p_group_code text,
@@ -15,33 +15,21 @@ set search_path = public
 as $$
 declare
   v_player_id uuid;
-  v_group_code text;
-  v_has_late_unlock boolean;
 begin
   v_player_id := public.touch_session(p_session_token);
-  v_group_code := upper(trim(p_group_code));
 
-  select exists (
-    select 1
-    from public.players
-    where id = v_player_id
-      and lower(display_name) = 'cigansky sen'
-  ) into v_has_late_unlock;
-
-  if (now() at time zone 'Europe/Bratislava') >= timestamp '2026-06-11 21:00:00'
-     and not (v_has_late_unlock and v_group_code <> 'A') then
+  if (now() at time zone 'Europe/Bratislava') >= timestamp '2026-06-11 21:00:00' then
     raise exception 'Tournament tips are locked';
   end if;
 
   insert into public.group_order_tips (player_id, group_code, team_order, updated_at)
-  values (v_player_id, v_group_code, p_team_order, now())
+  values (v_player_id, upper(trim(p_group_code)), p_team_order, now())
   on conflict (player_id, group_code)
   do update set
     team_order = excluded.team_order,
     updated_at = now();
 end;
 $$;
-
 create or replace function public.set_award_tip(
   p_session_token uuid,
   p_award_code text,
@@ -64,7 +52,7 @@ begin
     select 1
     from public.players
     where id = v_player_id
-      and lower(display_name) = 'cigansky sen'
+      and lower(display_name) in ('limon ďzamal', 'limon džamal')
   ) into v_has_late_unlock;
 
   if (now() at time zone 'Europe/Bratislava') >= timestamp '2026-06-11 21:00:00'
@@ -108,6 +96,5 @@ begin
   do update set picked_player_id = excluded.picked_player_id, updated_at = now();
 end;
 $$;
-
 grant execute on function public.set_group_order_tip(uuid, text, text[]) to anon, authenticated;
 grant execute on function public.set_award_tip(uuid, text, text) to anon, authenticated;
