@@ -1,7 +1,5 @@
--- Temporary exception for late bonus tips.
--- Closes the previous "cigansky sen" exception.
--- Allows only profile "Limon Ďzamal" to edit bonus award tips.
--- Group-order tips remain locked for everyone.
+-- Restores full lock for tournament-wide tips.
+-- Group-order tips and bonus award tips are locked for everyone after the first kickoff.
 -- Run this in Supabase SQL Editor.
 create or replace function public.set_group_order_tip(
   p_session_token uuid,
@@ -44,19 +42,10 @@ declare
   v_player_id uuid;
   v_position text;
   v_dob date;
-  v_has_late_unlock boolean;
 begin
   v_player_id := public.touch_session(p_session_token);
 
-  select exists (
-    select 1
-    from public.players
-    where id = v_player_id
-      and lower(display_name) in ('limon ďzamal', 'limon džamal')
-  ) into v_has_late_unlock;
-
-  if (now() at time zone 'Europe/Bratislava') >= timestamp '2026-06-11 21:00:00'
-     and not v_has_late_unlock then
+  if (now() at time zone 'Europe/Bratislava') >= timestamp '2026-06-11 21:00:00' then
     raise exception 'Tournament tips are locked';
   end if;
 

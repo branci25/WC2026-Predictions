@@ -38,7 +38,6 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const SESSION_KEY = "ms2026-supabase-sessions-v1";
 const TIP_LOCK_MINUTES = 10;
 const TOURNAMENT_LOCK_AT = new Date(2026, 5, 11, 21, 0, 0, 0);
-const LATE_AWARD_UNLOCK_PROFILES = new Set(["limon \u010fzamal", "limon d\u017eamal"]);
 const EXACT_SCORE_POINTS = 6;
 const MAX_JOKERS = 2;
 const YOUNG_PLAYER_CUTOFF = "2005-01-01";
@@ -997,17 +996,12 @@ function tournamentLockText(now = Date.now()) {
   return `Uz\u00e1vierka ${date} ${time}`;
 }
 
-function hasLateAwardUnlock(profileName = state.activeProfile) {
-  return LATE_AWARD_UNLOCK_PROFILES.has(String(profileName || "").trim().toLowerCase());
-}
-
 function canEditTournamentGroupPick(group, profileName = state.activeProfile) {
   return !isTournamentLocked();
 }
 
 function canEditTournamentAwards(profileName = state.activeProfile) {
-  if (!isTournamentLocked()) return true;
-  return hasLateAwardUnlock(profileName);
+  return !isTournamentLocked();
 }
 
 function tournamentGroupLockText() {
@@ -1015,7 +1009,6 @@ function tournamentGroupLockText() {
 }
 
 function tournamentAwardsLockText() {
-  if (hasLateAwardUnlock() && isTournamentLocked()) return "V\u00fdnimka: bonusov\u00e9 tipy m\u00f4\u017ee\u0161 e\u0161te upravi\u0165";
   return tournamentLockText();
 }
 function matchKickoffAt(match) {
@@ -1436,7 +1429,7 @@ function renderAwards() {
         </div>
         <div class="awards-count"><strong>${visibleTipCount}</strong><span>z ${AWARD_CATEGORIES.length}</span></div>
       </div>
-      <div class="tournament-lock-note ${isTournamentLocked() && !hasLateAwardUnlock() ? "locked" : ""}">${tournamentAwardsLockText()}</div>
+      <div class="tournament-lock-note ${isTournamentLocked() ? "locked" : ""}">${tournamentAwardsLockText()}</div>
       ${!playersReady ? `<div class="empty-state">Hr\u00e1\u010di e\u0161te nie s\u00fa na\u010d\u00edtan\u00ed zo Supabase. Spusti <code>supabase/world_cup_players.sql</code> v SQL Editore.</div>` : ""}
       <div class="awards-grid">
         ${AWARD_CATEGORIES.map((award) => {
