@@ -1040,6 +1040,10 @@ function matchKickoffAt(match) {
   return new Date(year, month - 1, day, hour, minute, 0, 0);
 }
 
+function compareMatchesByKickoff(a, b) {
+  return matchKickoffAt(a).getTime() - matchKickoffAt(b).getTime() || Number(a.id) - Number(b.id);
+}
+
 function matchLockAt(match) {
   return new Date(matchKickoffAt(match).getTime() - TIP_LOCK_MINUTES * 60 * 1000);
 }
@@ -1270,7 +1274,7 @@ function renderMatches() {
     if (status === "finished" && !finished) return false;
     if (!query) return true;
     return [match.home, match.away, match.venue, match.group, match.round].join(" ").toLowerCase().includes(query);
-  });
+  }).sort(compareMatchesByKickoff);
 
   if (!filtered.length) {
     els.matches.innerHTML = `<div class="empty-state">Nenašli sa žiadne zápasy.</div>`;
